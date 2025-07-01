@@ -23,12 +23,12 @@
 
 #include "mvs/MvCameraControl.h"
 
-#include "metavision/sdk/driver/camera.h"
-#include "metavision/hal/device/device_discovery.h"
-#include <metavision/hal/facilities/i_trigger_in.h>
-#include "metavision/sdk/driver/ext_trigger.h"
+//#include "metavision/sdk/driver/camera.h"
+//#include "metavision/hal/device/device_discovery.h"
+//#include <metavision/hal/facilities/i_trigger_in.h>
+//#include "metavision/sdk/driver/ext_trigger.h"
 //
-//#include <DvsenseDriver/camera/DvsCameraManager.hpp>
+#include <DvsenseDriver/camera/DvsCameraManager.hpp>
 //#include <DvsenseHal/camera/DvsCameraUtils.hpp>
 
 
@@ -89,8 +89,8 @@ public:
         return frame_callback_id_num_;
     }
 
-    int register_event_callback(const Metavision::EventsCDCallback& callback);
-    //int register_event_callback(const dvsense::EventsStreamHandleCallback& callback);
+    //int register_event_callback(const Metavision::EventsCDCallback& callback);
+    int register_event_callback(const dvsense::EventsStreamHandleCallback& callback);
 
 private:
     // ----- APS camera -----
@@ -118,8 +118,8 @@ private:
     int get_next_frame(cv::Mat& frame);
 
     // ----- DVS camera -----
-    std::unique_ptr<Metavision::Camera> dvs_camera_;
-    //dvsense::CameraDevice dvs_camera_;
+    //std::unique_ptr<Metavision::Camera> dvs_camera_;
+    dvsense::CameraDevice dvs_camera_;
 
     int find_dvs_camera();
     int start_dvs_camera();
@@ -127,10 +127,9 @@ private:
 
     // ----- sync -----
     void ext_trigger_sync_callback(
-        const Metavision::EventExtTrigger* begin,
-        const Metavision::EventExtTrigger* end
-        //const dvsense::EventTriggerIn* begin
-        //const dvsense::EventTriggerIn* end
+        //const Metavision::EventExtTrigger* begin,
+        //const Metavision::EventExtTrigger* end
+        const dvsense::EventTriggerIn* begin
     );
     uint64_t last_timestamp_ = 0;
 

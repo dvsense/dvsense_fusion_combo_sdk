@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
     //start-up visualization    
     DvsVisualizer dvs_visualizer{ HEIGHT, WIDTH };
     DvsProcess dvs_process{ HEIGHT, WIDTH };
-    std::unique_ptr<dvsense::CameraComboManager> ccm = std::make_unique<dvsense::CameraComboManager>(50);
+    std::unique_ptr<dvsense::CameraComboManager> ccm = std::make_unique<dvsense::CameraComboManager>(20);
     cv::Mat img_to_show(HEIGHT, WIDTH, CV_8UC3, cv::Scalar(0, 0, 0));
     std::mutex img_to_show_mutex;
 
@@ -44,8 +44,9 @@ int main(int argc, char* argv[]) {
         [&ccm, &img_to_show, &img_to_show_mutex, &dvs_visualizer, &dvs_process, &aps_frames, &dvs_frames, &count, &in_collection, &actual_count](const dvsense::ApsMFrame &aps_frame) {
             if(in_collection) {
                 cv::Mat new_dvs_frame;
-                dvs_visualizer.get_histogram(new_dvs_frame);
-                dvs_visualizer.reset();
+                //dvs_visualizer.get_histogram(new_dvs_frame);
+                //dvs_visualizer.reset();
+                dvs_process.get_histogram(new_dvs_frame);
 
                 cv::Mat new_aps_frame;
                 int pixel_cnt = (aps_frame.frame.rows - HEIGHT) / 2;
@@ -81,20 +82,21 @@ int main(int argc, char* argv[]) {
         }
     );
 
-    //ccm->register_event_callback(
-    //    [&dvs_visualizer, &dvs_process](const dvsense::EventIterator_t begin, const dvsense::EventIterator_t end) {
-    //        dvs_visualizer.update_events(begin, end);
-
-    //        static uint64_t last_timestamp = 0;
-    //        for (auto iter = begin; iter < end; iter++) {
-    //            if (iter->timestamp - last_timestamp > 200)
-    //                std::cout << "last_timestamp: " <<last_timestamp << " timestamp: " << iter->timestamp 
-    //                << " diff: " << iter->timestamp - last_timestamp << std::endl;
-    //            last_timestamp = iter->timestamp;
-    //        }
-    //    }
-    //);
     ccm->register_event_callback(
+        [&dvs_visualizer, &dvs_process](const dvsense::EventIterator_t begin, const dvsense::EventIterator_t end) {
+            //dvs_visualizer.update_events(begin, end);
+            dvs_process.add_events(begin, end);
+
+            //static uint64_t last_timestamp = 0;
+            //for (auto iter = begin; iter < end; iter++) {
+            //    if (iter->timestamp - last_timestamp > 200)
+            //        std::cout << "last_timestamp: " <<last_timestamp << " timestamp: " << iter->timestamp 
+            //        << " diff: " << iter->timestamp - last_timestamp << std::endl;
+            //    last_timestamp = iter->timestamp;
+            //}
+        }
+    );
+    /*ccm->register_event_callback(
         [&dvs_visualizer](const Metavision::EventCD* begin, const Metavision::EventCD* end) {
             dvs_visualizer.update_events(begin, end);
             static uint64_t last_timestamp = 0;
@@ -106,7 +108,7 @@ int main(int argc, char* argv[]) {
             }
    
         }
-    );
+    );*/
     //std::mutex chessboard_mutex;
     //cv::Mat chessboard_base = dvsense::calib_utils::get_chessboard(CHESSBOARD_ROW, CHESSBOARD_COL, CHESSBOARD_SIZE);
     //cv::Mat black = cv::Mat(chessboard_base.size(), CV_8UC1, cv::Scalar(0));

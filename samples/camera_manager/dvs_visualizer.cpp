@@ -10,16 +10,16 @@ DvsVisualizer::DvsVisualizer(const int height, const int width, const int max_co
     time_surface_ = cv::Mat(height_, width_, CV_8UC1, cv::Scalar(1));
 }
 
-//void DvsVisualizer::update_events(const dvsense::Event2D* begin, const dvsense::Event2D* end) {
-//	int index = 0;
-//	std::unique_lock<std::mutex> lock(event_buffer_mutex_);
-//	for (auto& event = begin; event != end; event++) {
-//		index = (event->y * width_ + event->x) * 2 + event->polarity;
-//		if (event_buffer_->at(index) < max_count_) {
-//			event_buffer_->at(index)++;
-//		}
-//	}
-//}
+void DvsVisualizer::update_events(const dvsense::Event2D* begin, const dvsense::Event2D* end) {
+	int index = 0;
+	std::unique_lock<std::mutex> lock(event_buffer_mutex_);
+	for (auto& event = begin; event != end; event++) {
+		index = (event->y * width_ + event->x) * 2 + event->polarity;
+		if (event_buffer_->at(index) < max_count_) {
+			event_buffer_->at(index)++;
+		}
+	}
+}
 
 void DvsVisualizer::update_events(const Metavision::EventCD* begin, const Metavision::EventCD* end) {
 	int index = 0;

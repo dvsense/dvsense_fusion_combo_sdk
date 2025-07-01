@@ -32,7 +32,7 @@ public:
 	DvsVisualizer(const int height, const int width, const int max_count=10);
 	~DvsVisualizer();
 	void update_events(const Metavision::EventCD* begin, const Metavision::EventCD* end);
-	//void update_events(const dvsense::Event2D* begin, const dvsense::Event2D* end);
+	void update_events(const dvsense::Event2D* begin, const dvsense::Event2D* end);
     //void update_events(const dvsense::Event2DVector &events);
     //void update_events(dvsense::EventIterator_t begin, dvsense::EventIterator_t end);
 	void visualize_frame(const cv::Mat &input_frame, cv::Mat &output_frame);

@@ -7,8 +7,8 @@ add_definitions(-D NOMINMAX)
  
 find_package(DvsenseDriver COMPONENTS Driver REQUIRED)
 
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/rgb_frames DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/calib_data DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+#file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/rgb_frames DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+#file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/calib_data DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 
 #add_executable(rgb_single_calib rgb_single_calib.cpp)

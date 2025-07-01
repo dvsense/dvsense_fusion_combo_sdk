@@ -186,7 +186,7 @@ namespace dvsense
                             //for (const auto& callback : new_frame_callbacks) {
                             //    callback.second(*raw_frame_);
                             //}
-                            //LOG_INFO("aps num: %d", aps_num_++);
+                            LOG_INFO("aps num: %d", aps_num_++);
                         }
                         frame_ready_condition_.notify_one( );
                     }
@@ -222,62 +222,66 @@ namespace dvsense
 
 // ---------------------- DVS ---------------------
     int CameraComboManager::find_dvs_camera() {
-        ////Metavision::DeviceDiscovery::SystemList available_sources = Metavision::DeviceDiscovery::list_available_sources_local();
-        //dvsense::DvsCameraManager cameraManager;
-        //std::vector<dvsense::CameraDescription> cameraDescs = cameraManager.getCameraDescs();
-        ////camera_ = cameraManager.openCamera(cameraDescs[0].serial);
+        //Metavision::DeviceDiscovery::SystemList available_sources = Metavision::DeviceDiscovery::list_available_sources_local();
+        dvsense::DvsCameraManager cameraManager;
+        std::vector<dvsense::CameraDescription> cameraDescs = cameraManager.getCameraDescs();
+        //camera_ = cameraManager.openCamera(cameraDescs[0].serial);
 
-        //if (cameraDescs.empty()) {
-        //    std::cout << "No available sources" << std::endl;
-        //    return -1;
-        //}
-
-        //std::cout << cameraDescs.size() << " camera(s) found" << std::endl;
-        //std::cout << "Serial Number: " << cameraDescs.front().serial << std::endl;
-
-        //// init the camera
-        //dvs_camera_ = cameraManager.openCamera(cameraDescs[0].serial);
-        //// enable trigger in
-        //// iggerIn>()->enable(Metavision::I_TriggerIn::Channel::Main);
-        //std::shared_ptr<dvsense::CameraTool> trigger_in = dvs_camera_->getTool(dvsense::ToolType::TOOL_TRIGGER_IN);
-        //trigger_in->setParam("enable", true);
-        //return 0;
-
-        Metavision::DeviceDiscovery::SystemList available_sources = Metavision::DeviceDiscovery::list_available_sources_local();
-
-        if (available_sources.empty()) {
+        if (cameraDescs.empty()) {
             std::cout << "No available sources" << std::endl;
             return -1;
         }
 
-        std::cout << available_sources.size() << " camera(s) found" << std::endl;
-        std::cout << "Serial Number: " << available_sources.front().serial_ << std::endl;
+        std::cout << cameraDescs.size() << " camera(s) found" << std::endl;
+        std::cout << "Serial Number: " << cameraDescs.front().serial << std::endl;
 
         // init the camera
-        dvs_camera_ = std::make_unique<Metavision::Camera>(
-            Metavision::Camera::from_serial(available_sources.front().serial_)
-        );
+        dvs_camera_ = cameraManager.openCamera(cameraDescs[0].serial);
         // enable trigger in
-        dvs_camera_->get_device().get_facility<Metavision::I_TriggerIn>()->enable(Metavision::I_TriggerIn::Channel::Main);
+        // iggerIn>()->enable(Metavision::I_TriggerIn::Channel::Main);
+        std::shared_ptr<dvsense::CameraTool> trigger_in = dvs_camera_->getTool(dvsense::ToolType::TOOL_TRIGGER_IN);
+        trigger_in->setParam("enable", true);
 
+        std::shared_ptr<dvsense::CameraTool> erc_tool = dvs_camera_->getTool(dvsense::ToolType::TOOL_EVENT_RATE_CONTROL);
+        bool ret = erc_tool->setParam("max_event_rate", 1);
+        ret = erc_tool->setParam("enable", true);
         return 0;
+
+        //Metavision::DeviceDiscovery::SystemList available_sources = Metavision::DeviceDiscovery::list_available_sources_local();
+
+        //if (available_sources.empty()) {
+        //    std::cout << "No available sources" << std::endl;
+        //    return -1;
+        //}
+
+        //std::cout << available_sources.size() << " camera(s) found" << std::endl;
+        //std::cout << "Serial Number: " << available_sources.front().serial_ << std::endl;
+
+        //// init the camera
+        //dvs_camera_ = std::make_unique<Metavision::Camera>(
+        //    Metavision::Camera::from_serial(available_sources.front().serial_)
+        //);
+        //// enable trigger in
+        //dvs_camera_->get_device().get_facility<Metavision::I_TriggerIn>()->enable(Metavision::I_TriggerIn::Channel::Main);
+
+        //return 0;
     }
 
 int CameraComboManager::start_dvs_camera() {
-    dvs_camera_->ext_trigger().add_callback(
-        [this](const Metavision::EventExtTrigger* begin, const Metavision::EventExtTrigger* end) {
-            //static uint64_t trigger_cnt = 0;
-            //std::cout << "ext trigger sync callback: " << begin->t << " polarity: " << begin->p 
-            //    << " trigger_num: " << trigger_cnt++ / 2 << std::endl;
-            ext_trigger_sync_callback(begin, end);
-        }
-    );
-    //dvs_camera_->addTriggerInCallback(
-    //    [this](const dvsense::EventTriggerIn begin) {
-    //        //std::cout << "ext trigger sync callback" << std::endl;
-    //        ext_trigger_sync_callback(&begin);
+    //dvs_camera_->ext_trigger().add_callback(
+    //    [this](const Metavision::EventExtTrigger* begin, const Metavision::EventExtTrigger* end) {
+    //        //static uint64_t trigger_cnt = 0;
+    //        //std::cout << "ext trigger sync callback: " << begin->t << " polarity: " << begin->p 
+    //        //    << " trigger_num: " << trigger_cnt++ / 2 << std::endl;
+    //        ext_trigger_sync_callback(begin, end);
     //    }
     //);
+    dvs_camera_->addTriggerInCallback(
+        [this](const dvsense::EventTriggerIn begin) {
+            //std::cout << "ext trigger sync callback" << std::endl;
+            ext_trigger_sync_callback(&begin);
+        }
+    );
     dvs_camera_->start();
     return 0;
 }
@@ -286,12 +290,12 @@ void CameraComboManager::stop_dvs_camera() {
     dvs_camera_->stop();
 }
 
-int CameraComboManager::register_event_callback(const Metavision::EventsCDCallback& callback) {  
-    return dvs_camera_->cd().add_callback(callback);
-}
-//int CameraComboManager::register_event_callback(const dvsense::EventsStreamHandleCallback& callback) {
-//    return dvs_camera_->addEventsStreamHandleCallback(callback);
+//int CameraComboManager::register_event_callback(const Metavision::EventsCDCallback& callback) {  
+//    return dvs_camera_->cd().add_callback(callback);
 //}
+int CameraComboManager::register_event_callback(const dvsense::EventsStreamHandleCallback& callback) {
+    return dvs_camera_->addEventsStreamHandleCallback(callback);
+}
 
 // ---------------------- sync control -------------------------
 
@@ -342,10 +346,14 @@ void CameraComboManager::start_camera(std::string output_dir){
 
         //std::this_thread::sleep_for(std::chrono::seconds(1));
         // start dvs camera
+
+
+
+
         start_dvs_camera();
         //dvs_camera_->startRecording("./0627.raw");
 
-        std::this_thread::sleep_for(std::chrono::seconds(5));
+        //std::this_thread::sleep_for(std::chrono::seconds(8));
 
         // start aps camera
         start_aps_camera();
@@ -382,7 +390,8 @@ void CameraComboManager::start_recoreding(std::string output_dir) {
         trigger_write_status_ = true;
 
         std::string dvs_file_path = (output_dir_path / ("fusion-" + current_time + ".raw")).string();
-        dvs_camera_->start_recording(dvs_file_path);
+        /*dvs_camera_->start_recording(dvs_file_path);*/
+        dvs_camera_->startRecording(dvs_file_path);
 
         int fourcc = cv::VideoWriter::fourcc('X', 'V', 'I', 'D');
         //cv::Size frameSize(1280, 1024);  
@@ -413,7 +422,8 @@ void CameraComboManager::start_recoreding(std::string output_dir) {
 }
 void CameraComboManager::stop_recoreding() {
     std::cout << "Stop Recording." << std::endl;
-    dvs_camera_->stop_recording();
+    /*dvs_camera_->stop_recording();*/
+    dvs_camera_->stopRecording();
     if (video_wirter_ != nullptr) {
         video_wirter_->release();
         video_wirter_.reset();
@@ -423,18 +433,16 @@ void CameraComboManager::stop_recoreding() {
 }
 
 void CameraComboManager::ext_trigger_sync_callback(
-    const Metavision::EventExtTrigger* begin, 
-    const Metavision::EventExtTrigger* end
-    //const dvsense::EventTriggerIn* begin
-    //const dvsense::EventTriggerIn* end
+    //const Metavision::EventExtTrigger* begin, 
+    //const Metavision::EventExtTrigger* end
+    const dvsense::EventTriggerIn* begin
 ) {
     // only rising edges are accurate
 
-    if (begin->p == 0) return;
+    if (begin->polarity == 0) return;
 
-    //std::cout << "APS buffer length: " << aps_frames_.size() << std::endl;
-    
-    //LOG_INFO("trigger num: %d £¬begin_time: %llu", trigger_num_++ , begin->t);
+    LOG_INFO("aps buffer length: %d ", aps_frames_.size());
+    LOG_INFO("trigger num: %d ", trigger_num_++ );
     std::unique_ptr<ApsMFrame> frame;
     {
         
@@ -450,7 +458,7 @@ void CameraComboManager::ext_trigger_sync_callback(
         aps_frames_.pop();
     }
 
-    Timestamp t = begin->t;
+    Timestamp t = begin->timestamp;
     //std::cout << t << std::endl;
     /////////Ð´Èëtriggerin
     //if(trigger_write_status_)
@@ -472,7 +480,7 @@ void CameraComboManager::ext_trigger_sync_callback(
     for (const auto& callback : new_frame_callbacks) {
         callback.second(*frame);
     }
-    this->last_timestamp_ = begin->t;
+    this->last_timestamp_ = begin->timestamp;
 }
 
 void CameraComboManager::stop_camera() {
