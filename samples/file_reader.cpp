@@ -1,4 +1,9 @@
+#include <queue>
+#include <iostream>
+#include <fstream>
+#include <string>
 #include <opencv2/opencv.hpp>
+#include <opencv2/core/utility.hpp>
 #include "DvsenseDriver/FileReader/DvsFileReader.h"
 #include "DvsenseBase/logging/logger.hh"
 
@@ -46,25 +51,12 @@ public:
 };
 
 int main() {
-
-	// ----------------- Program description -----------------
-
-	//if (argc < 2) {
-	//	std::cerr << "Usage: " << argv[0] << " <event_file_path>" << std::endl;
-	//	return 1;
-	//}
-
-	const std::string short_program_desc(
-		"Simple viewer to stream events from an event file, using the SDK driver API.\n");
-	std::string long_program_desc(short_program_desc +
-		"Press 'q' or Escape key to leave the program.\n");
-	std::cout << long_program_desc << std::endl;
-
-	// ----------------- Event file initialization -----------------
-
-	//std::string event_file_path = argv[1];
-	std::string event_file_path = "D:/FusionCamera/test_datas/fusion-20250624-1.raw";
-	std::cout << "Event file path: " << event_file_path << std::endl;
+	cv::VideoCapture cap("D:/FusionCamera/test_datas/fusion-202507161537.mp4", cv::CAP_FFMPEG);
+	std::string event_file_path = "D:/FusionCamera/test_datas/fusion-202507161537.raw";
+	if (!cap.isOpened()) {
+		std::cerr << "Error: Could not open video file." << std::endl;
+		return -1;
+	} 
 
 	dvsense::DvsFile reader = dvsense::DvsFileReader::createFileReader(event_file_path);
 	if (!reader->loadFile())
@@ -76,56 +68,48 @@ int main() {
 	EventAnalyzer event_analyzer;
 	event_analyzer.setup_display(reader->getWidth(), reader->getHeight());
 
-	const int fps = 30; // event-based cameras do not have a frame rate, but we need one for visualization
+	const int fps = 60; // event-based cameras do not have a frame rate, but we need one for visualization
 	const int wait_time = static_cast<int>(std::round(1.f / fps * 1000)); // how long we should wait between two frames
-	cv::Mat display;                                                      // frame where events will be accumulated
+
 	const std::string window_name = "DVSense File Viewer";
 	cv::namedWindow(window_name, cv::WINDOW_GUI_EXPANDED);
 	cv::resizeWindow(window_name, reader->getWidth(), reader->getHeight());
 
 	// ----------------- Event processing and show -----------------
 
-	dvsense::TimeStamp start_timestamp, end_timestamp;
-	reader->getStartTimeStamp(start_timestamp);
-	reader->getEndTimeStamp(end_timestamp);
-	LOG_INFO("File start ts:%u", start_timestamp);
-	LOG_INFO("File end ts:%u", end_timestamp);
-	uint64_t max_events = 0;
-	reader->getMaxEvents(max_events);
-	dvsense::TimeStamp get_time = start_timestamp;
-	bool stop_application = false;
-	while (!stop_application) {
-		//Control the acquisition time and display frame rate to determine the playback rate
-		std::shared_ptr<dvsense::Event2DVector> events = reader->getNTimeEventsGivenStartTimeStamp(get_time, 20000);
-		get_time += 20000;
-		event_analyzer.process_events(events->data(), events->data() + events->size());
+	dvsense::TimeStamp offset_timestamp;
+	reader->getStartTimeStamp(offset_timestamp);
 
+	cv::Mat new_dvs_frame;
+	cv::Mat new_aps_frame;
+	cv::Mat frame;
+	while (cap.read(frame)) {
+		dvsense::TimeStamp pts = cap.get(cv::CAP_PROP_POS_MSEC) * 1000;
+		dvsense::TimeStamp current_ts = pts + offset_timestamp;
+
+		std::shared_ptr<dvsense::Event2DVector> events = reader->getNTimeEventsGivenStartTimeStamp(current_ts, wait_time * 1000);
+		event_analyzer.process_events(events->data(), events->data() + events->size());
 		if (reader->reachedEndOfEvents())
 		{
-			//replay
-			get_time = start_timestamp;
-			std::cout << "Playback finished, replaying." << std::endl;
-			reader->seekTime(get_time);
+			break;
 		}
-		event_analyzer.get_display_frame(display);
-		if (!display.empty()) {
-			cv::imshow(window_name, display);
-		}
+		event_analyzer.get_display_frame(new_dvs_frame);
 
-		// If user presses `q` key, exit loop and stop application
+		int y_start = (frame.rows - new_dvs_frame.rows) / 2;
+		int x_start = (frame.cols - new_dvs_frame.cols) / 2;
+
+		frame(cv::Rect(x_start, y_start, new_dvs_frame.cols, new_dvs_frame.rows)).copyTo(new_aps_frame);
+		new_aps_frame.setTo(cv::Scalar(0, 0, 0), new_dvs_frame);
+		new_aps_frame = new_aps_frame + new_dvs_frame;
+
+		cv::imshow(window_name, new_aps_frame);
+
 		int key = cv::waitKey(wait_time);
 		if ((key & 0xff) == 'q' || (key & 0xff) == 27) {
-			stop_application = true;
-			std::cout << "q pressed, exiting." << std::endl;
-		}
-		else if ((key & 0xff) == 'c') {
-			// cvt mp4 test
-			if (reader->exportEventDataToVideo(start_timestamp, end_timestamp, "test.mp4"))
-			{
-				std::cout << "export video success!" << std::endl;
-			}
+			break;
 		}
 	}
 
+	cap.release();
 	cv::destroyAllWindows();
 }
