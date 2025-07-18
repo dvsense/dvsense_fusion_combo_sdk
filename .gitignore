@@ -42,3 +42,6 @@
 
 .vs/
 out/
+.vscode/
+log
+build

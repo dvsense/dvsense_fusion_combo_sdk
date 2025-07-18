@@ -51,8 +51,8 @@ public:
 };
 
 int main() {
-	cv::VideoCapture cap("D:/FusionCamera/test_datas/fusion-202507161537.mp4", cv::CAP_FFMPEG);
-	std::string event_file_path = "D:/FusionCamera/test_datas/fusion-202507161537.raw";
+	cv::VideoCapture cap("/home/tomato/workspace/Data/fusion-2025-07-18_17_05_00.mp4", cv::CAP_FFMPEG);
+	std::string event_file_path = "/home/tomato/workspace/Data/fusion-2025-07-18_17_05_00.raw";
 	if (!cap.isOpened()) {
 		std::cerr << "Error: Could not open video file." << std::endl;
 		return -1;

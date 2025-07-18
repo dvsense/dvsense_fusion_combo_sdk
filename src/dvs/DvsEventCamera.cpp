@@ -84,12 +84,12 @@ namespace dvsense
         dvs_camera_->stopRecording();
     }
 
-    uint16_t DvsEventCamera::getWidth()
+    uint16_t DvsEventCamera::getDvsWidth()
     {
         return dvs_camera_->getWidth();
     }
 
-    uint16_t DvsEventCamera::getHeight()
+    uint16_t DvsEventCamera::getDvsHeight()
     {
         return dvs_camera_->getHeight();
     }

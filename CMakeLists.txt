@@ -22,24 +22,24 @@ message(STATUS "CAMERA_MANAGER_INCLUDE_DIR: ${CAMERA_MANAGER_INCLUDE_DIR}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/samples)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    # ÉèÖÃDebug¹¹½¨ÀàÐÍµÄ±àÒëÑ¡Ïî
+    # ï¿½ï¿½ï¿½ï¿½Debugï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÍµÄ±ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
     #add_definitions(-DDEBUG)
     #target_compile_definitions(camera_combo PRIVATE DEBUG)
     if(NOT WIN32)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g")
     endif()
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    # ÉèÖÃRelease¹¹½¨ÀàÐÍµÄ±àÒëÑ¡Ïî
+    # ï¿½ï¿½ï¿½ï¿½Releaseï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÍµÄ±ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
     if(NOT WIN32)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG")
     endif()
 elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    # ÉèÖÃRelWithDebInfo¹¹½¨ÀàÐÍµÄ±àÒëÑ¡Ïî
+    # ï¿½ï¿½ï¿½ï¿½RelWithDebInfoï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÍµÄ±ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
     if(NOT WIN32)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -g")
     endif()
 elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
-    # ÉèÖÃMinSizeRel¹¹½¨ÀàÐÍµÄ±àÒëÑ¡Ïî
+    # ï¿½ï¿½ï¿½ï¿½MinSizeRelï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÍµÄ±ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
     if(NOT WIN32)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os")
     endif()
@@ -77,27 +77,37 @@ add_library(DvsRgbFusionCamera SHARED
     "src/camera_manager/DataToVideo.cpp" )
 
 find_package(OpenCV REQUIRED)
-# ´òÓ¡ OpenCV ÐÅÏ¢£¨ÓÃÓÚµ÷ÊÔ£©
+# ï¿½ï¿½Ó¡ OpenCV ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½Ô£ï¿½
 message(STATUS "OpenCV Version: ${OpenCV_VERSION}")
 message(STATUS "OpenCV Include Dir: ${OpenCV_INCLUDE_DIRS}")
 message(STATUS "OpenCV Libraries: ${OpenCV_LIBS}")
 
 find_package(Boost COMPONENTS filesystem REQUIRED)
-# find_library(MVS_LIB NAMES MvCameraControl PATHS ls /opt/MVS/lib/64)
-find_library(MVS_LIB NAMES MvCameraControl PATHS "C:/Program Files (x86)/MVS/Development/Libraries/win64/")
 find_package(DvsenseDriver COMPONENTS Driver REQUIRED)
-# set(MVS_LIB_DIR D:/Software/MVS/Development/Libraries/win64)
-# set(MVS_INCLUDE_DIR /opt/MVS/include/)
-set(MVS_INCLUDE_DIR C:/Program Files (x86)/MVS/Development/Includes)
+
+if(WIN32)
+    cmake_policy(SET CMP0091 NEW)
+    set(CMAKE_USE_WIN32_MSVC_LONG_PATHS ON)
+    set(MVS_LIB_SEARCH_PATHS "D:/AppsInstall/MVS/MVS/Development/Libraries/win64")
+    set(MVS_INCLUDE_DIR D:/AppsInstall/MVS/MVS/Development/Includes/)
+else()
+    set(MVS_LIB_SEARCH_PATHS "/opt/MVS/lib/64")
+    set(MVS_INCLUDE_DIR /opt/MVS/include/)
+endif()
+find_library(MVS_LIB NAMES MvCameraControl PATHS ${MVS_LIB_SEARCH_PATHS})
+if(NOT MVS_LIB)
+    message(FATAL_ERROR "MvCameraControl library not found")
+endif()
 
 
-# Ìí¼ÓÍ·ÎÄ¼þÂ·¾¶
+# ï¿½ï¿½ï¿½ï¿½Í·ï¿½Ä¼ï¿½Â·ï¿½ï¿½
 target_include_directories(DvsRgbFusionCamera
     PRIVATE
     ${FFMPEG_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include/dvs
     ${CMAKE_CURRENT_SOURCE_DIR}/include/rgb
     ${CMAKE_CURRENT_SOURCE_DIR}/include/camera_manager
+    ${MVS_INCLUDE_DIR}
 )
 
 target_link_libraries(DvsRgbFusionCamera 
@@ -138,7 +148,7 @@ target_include_directories(fusion_show
     ${CMAKE_CURRENT_SOURCE_DIR}/include/rgb
     ${CMAKE_CURRENT_SOURCE_DIR}/include/camera_manager
     ${CALIB_INCLUDE_DIRS}
-    ${OpenCV_INCLUDE_DIRS}   
+    ${OpenCV_INCLUDE_DIRS}
 )
 
 

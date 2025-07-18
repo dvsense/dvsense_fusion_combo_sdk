@@ -3,7 +3,10 @@
 #include "opencv2/core.hpp"
 #include "opencv2/imgproc.hpp"
 #include "opencv2/videoio.hpp"
-#include "driver/MvCameraControl.h"
+#include "MvCameraControl.h"
+
+#include <atomic>
+#include <thread>
 #include "RgbCamera.hpp"
 
 struct FrameAndDrop
