@@ -1,5 +1,4 @@
 #include "DvsRgbFusionCamera.hpp"
-#include "DvsEventCamera.hpp"
 
 //cv::Vec3b color_bg = cv::Vec3b(0x00, 0x00, 0x00);
 //cv::Vec3b color_on = cv::Vec3b(0xff, 0x00, 0xff);
@@ -54,7 +53,7 @@ public:
 
 int main()
 {
-	std::string data_save_path = "D:/FusionCamera/test_datas";
+	std::string data_save_path = "/home/tomato/workspace/Data";
 
 	std::queue<cv::Mat> buffer_show;
 	std::mutex display_image_mutex;
@@ -65,7 +64,7 @@ int main()
 		std::cout << "fusionCamera is not connected" << std::endl;
 		return 0;
 	}
-	dvsense::CameraDescription camera_desc = fusionCamera->getDvsDesc();
+	// dvsense::CameraDescription camera_desc = fusionCamera->getDvsDesc();
 
 	uint16_t dvs_width = fusionCamera->getWidth();
 	uint16_t dvs_height = fusionCamera->getHeight();
@@ -93,6 +92,9 @@ int main()
 				int aps_width = rgbframe.width();
 				int aps_height = rgbframe.height();
 
+				static int new_dvs_width = dvs_width * 1.215;
+				static int new_dvs_height = dvs_height * 1.215;
+
 				int start_timestamp = rgbframe.exposure_start_timestamp;
 				int end_timestamp = rgbframe.exposure_end_timestamp;
 
@@ -102,11 +104,12 @@ int main()
 				cv::Mat reconstructed_image(aps_height, aps_width, CV_8UC3, const_cast<void*>(static_cast<const void*>(external_data)));
 
 				cv::Mat new_aps_frame;
-				int y_start = (aps_height - dvs_height) / 2;
-				int x_start = (aps_width - dvs_width) / 2;
+				int y_start = (aps_height - new_dvs_height) / 2;
+				int x_start = (aps_width - new_dvs_width) / 2;
 
 				static cv::Mat aps_resize;
-				reconstructed_image(cv::Rect(x_start, y_start, dvs_width, dvs_height)).copyTo(aps_resize);
+				reconstructed_image(cv::Rect(x_start, y_start, new_dvs_width, new_dvs_height)).copyTo(aps_resize);
+				cv::resize(aps_resize, aps_resize, cv::Size(dvs_width, dvs_height), cv::INTER_AREA);
 
 				{
 					std::unique_lock<std::mutex> lock(dvs_frame_mutex);

@@ -121,7 +121,7 @@ bool DvsRgbFusionCamera::removeTriggerInCallback(uint32_t callback_id)
 //std::shared_ptr<dvsense::Event2DVector> DvsRgbFusionCamera::getEvents()
 //{
 //	//std::lock_guard<std::mutex> lock(event_buffer_mutex_);
-//	//return std::make_shared<dvsense::Event2DVector>(*event_buffer_); // Éî¿½±´
+//	//return std::make_shared<dvsense::Event2DVector>(*event_buffer_); // ï¿½î¿½ï¿½ï¿½
 //    return event_buffer_; 
 //}
 //
@@ -131,17 +131,25 @@ bool DvsRgbFusionCamera::removeTriggerInCallback(uint32_t callback_id)
 //}
 
 
+// std::string DvsRgbFusionCamera::getCurrentTime() {
+//     auto now = std::chrono::system_clock::now();
+//     std::time_t now_time = std::chrono::system_clock::to_time_t(now);
+
+//     std::tm local_time;
+//     localtime_s(&local_time, &now_time);
+
+//     std::ostringstream oss;
+//     oss << std::put_time(&local_time, "%Y%m%d%H%M");
+
+//     return oss.str();
+// }
+
 std::string DvsRgbFusionCamera::getCurrentTime() {
     auto now = std::chrono::system_clock::now();
-    std::time_t now_time = std::chrono::system_clock::to_time_t(now);
-
-    std::tm local_time;
-    localtime_s(&local_time, &now_time);
-
-    std::ostringstream oss;
-    oss << std::put_time(&local_time, "%Y%m%d%H%M");
-
-    return oss.str();
+    auto time = std::chrono::system_clock::to_time_t(now);
+    char buffer[20];
+    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d_%H_%M_%S", std::localtime(&time));
+    return std::string(buffer);
 }
 
 int DvsRgbFusionCamera::startRecording(std::string output_dir) {
@@ -218,10 +226,10 @@ bool DvsRgbFusionCamera::removeApsFrameCallback(uint32_t callback_id) {
 
 uint16_t DvsRgbFusionCamera::getWidth()
 {
-    return dvs_camera_->getWidth();
+    return dvs_camera_->getDvsWidth();
 }
 
 uint16_t DvsRgbFusionCamera::getHeight()
 {
-    return dvs_camera_->getHeight();
+    return dvs_camera_->getDvsHeight();
 }

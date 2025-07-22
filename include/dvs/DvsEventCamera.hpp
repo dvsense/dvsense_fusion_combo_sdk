@@ -59,9 +59,9 @@ namespace dvsense
 
 		bool removeTriggerInCallback(uint32_t callback_id);
 
-		uint16_t getWidth();
+		uint16_t getDvsWidth();
 
-		uint16_t getHeight();
+		uint16_t getDvsHeight();
 
 
 	private:
