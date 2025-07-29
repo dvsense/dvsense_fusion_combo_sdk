@@ -53,7 +53,7 @@ public:
 
 int main()
 {
-	std::string data_save_path = "/home/tomato/workspace/Data";
+	std::string data_save_path = "D:/FusionCamera/test_datas";
 
 	std::queue<cv::Mat> buffer_show;
 	std::mutex display_image_mutex;
