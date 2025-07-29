@@ -1,6 +1,22 @@
 cmake_minimum_required(VERSION 3.8)
 project(fusion_camera)
 
+if(WIN32)
+    cmake_policy(SET CMP0091 NEW)
+    set(CMAKE_USE_WIN32_MSVC_LONG_PATHS ON)
+    set(MVS_LIB_SEARCH_PATHS "C:/Program Files (x86)/MVS/Development/Libraries/win64/" CACHE PATH "MVS root dir")
+    set(MVS_INCLUDE_DIR "C:/Program Files (x86)/MVS/Development/Includes" CACHE PATH "MVS include dir")
+else()
+    set(MVS_LIB_SEARCH_PATHS /opt/MVS/lib/64 CACHE PATH "MVS root dir")
+    set(MVS_INCLUDE_DIR /opt/MVS/include/ CACHE PATH "MVS include dir")
+endif()
+find_library(MVS_LIB NAMES MvCameraControl PATHS ${MVS_LIB_SEARCH_PATHS})
+if(NOT MVS_LIB)
+    message(FATAL_ERROR "MvCameraControl library not found")
+endif()
+
+set(CALIB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
@@ -45,8 +61,7 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
     endif()
 endif()
 
-set(FFMPEG_DIR "D:/vcpkg-DVDriver/vcpkg-2023.11.20/packages/ffmpeg_x64-windows")
-
+find_package(FFmpeg REQUIRED)
 find_library(AVCODEC_LIB 
     NAMES avcodec libavcodec
     HINTS ${FFMPEG_DIR}/lib
@@ -77,32 +92,12 @@ add_library(DvsRgbFusionCamera SHARED
     "src/camera_manager/DataToVideo.cpp" )
 
 find_package(OpenCV REQUIRED)
-# 打印 OpenCV 信息（用于调试）
-message(STATUS "OpenCV Version: ${OpenCV_VERSION}")
-message(STATUS "OpenCV Include Dir: ${OpenCV_INCLUDE_DIRS}")
-message(STATUS "OpenCV Libraries: ${OpenCV_LIBS}")
-
 find_package(Boost COMPONENTS filesystem REQUIRED)
 find_package(DvsenseDriver COMPONENTS Driver REQUIRED)
 
-if(WIN32)
-    cmake_policy(SET CMP0091 NEW)
-    set(CMAKE_USE_WIN32_MSVC_LONG_PATHS ON)
-    set(MVS_LIB_SEARCH_PATHS "D:/AppsInstall/MVS/MVS/Development/Libraries/win64")
-    set(MVS_INCLUDE_DIR D:/AppsInstall/MVS/MVS/Development/Includes/)
-else()
-    set(MVS_LIB_SEARCH_PATHS "/opt/MVS/lib/64")
-    set(MVS_INCLUDE_DIR /opt/MVS/include/)
-endif()
-find_library(MVS_LIB NAMES MvCameraControl PATHS ${MVS_LIB_SEARCH_PATHS})
-if(NOT MVS_LIB)
-    message(FATAL_ERROR "MvCameraControl library not found")
-endif()
 
-
-# 添加头文件路径
 target_include_directories(DvsRgbFusionCamera
-    PRIVATE
+    PUBLIC
     ${FFMPEG_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include/dvs
     ${CMAKE_CURRENT_SOURCE_DIR}/include/rgb
@@ -123,39 +118,24 @@ PUBLIC
     ${SWSCALE_LIB}
 )
 
+option(BUILD_SAMPLES "Build samples" OFF)
+if (BUILD_SAMPLES)
+    add_subdirectory(samples/FusionShow)
+    add_subdirectory(samples/FileReader)
+endif()
 
-add_executable(file_reader samples/file_reader.cpp)
-target_link_libraries(file_reader 
-    DvsRgbFusionCamera
-    ${OpenCV_LIBS}
-)
-target_include_directories(file_reader 
-PRIVATE 
-    ${CALIB_INCLUDE_DIRS}
-    ${OpenCV_INCLUDE_DIRS}   
-)
+option(BUILD_DOCS "Build documentation" OFF)
+if(BUILD_DOCS)
+    find_package(Doxygen REQUIRED)
+    set(DOXYGEN_IN ${CMAKE_CURRENT_LIST_DIR}/docs/Doxyfile.in)
+    set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
-add_executable(fusion_show samples/fusion_show.cpp src/dvs/DvsEventCamera.cpp)
-target_link_libraries(fusion_show 
-    DvsRgbFusionCamera
-    #fmt::fmt
-    ${OpenCV_LIBS}
-)
-target_include_directories(fusion_show
-    PRIVATE
-    ${FFMPEG_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/dvs
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/rgb
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/camera_manager
-    ${CALIB_INCLUDE_DIRS}
-    ${OpenCV_INCLUDE_DIRS}
-)
+    configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
 
+    add_custom_target( docs ALL
+        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Generating API documentation with Doxygen"
+        VERBATIM )
+endif()
 
-set(CALIB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include)
-
-
-#set(BUILD_SAMPLES ON CACHE BOOL "Build samples")
-#if(BUILD_SAMPLES)
-#  add_subdirectory(samples)
-#endif()

@@ -1,0 +1,564 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.13.2"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>“FUSIONCAMERA API”: DvsRgbFusionCamera类 参考</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<script type="text/javascript" src="clipboard.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="cookie.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+  $(function() { init_search(); });
+/* @license-end */
+</script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">“FUSIONCAMERA API”<span id="projectnumber">&#160;1.0.0</span>
+   </div>
+   <div id="projectbrief">xxx</div>
+  </td>
+    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <span id="MSearchSelect"                onmouseover="return searchBox.OnSearchSelectShow()"                onmouseout="return searchBox.OnSearchSelectHide()">&#160;</span>
+          <input type="text" id="MSearchField" value="" placeholder="搜索" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 制作者 Doxygen 1.13.2 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() { codefold.init(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function(){initNavTree('class_dvs_rgb_fusion_camera.html',''); initResizable(true); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">载入中...</div>
+<div class="SRStatus" id="Searching">搜索中...</div>
+<div class="SRStatus" id="NoMatches">未找到</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Public 成员函数</a> &#124;
+<a href="class_dvs_rgb_fusion_camera-members.html">所有成员列表</a>  </div>
+  <div class="headertitle"><div class="title">DvsRgbFusionCamera类 参考</div></div>
+</div><!--header-->
+<div class="contents">
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Public 成员函数</h2></td></tr>
+<tr class="memitem:a537f6e74fed0a62d839dc41144b34be5" id="r_a537f6e74fed0a62d839dc41144b34be5"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a537f6e74fed0a62d839dc41144b34be5">DvsRgbFusionCamera</a> (float fps=30)</td></tr>
+<tr class="memdesc:a537f6e74fed0a62d839dc41144b34be5"><td class="mdescLeft">&#160;</td><td class="mdescRight">构造函数  <br /></td></tr>
+<tr class="separator:a537f6e74fed0a62d839dc41144b34be5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4fe94d5ef8ef9724b74131ed31e67979" id="r_a4fe94d5ef8ef9724b74131ed31e67979"><td class="memItemLeft" align="right" valign="top">const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4fe94d5ef8ef9724b74131ed31e67979">isConnected</a> ()</td></tr>
+<tr class="memdesc:a4fe94d5ef8ef9724b74131ed31e67979"><td class="mdescLeft">&#160;</td><td class="mdescRight">检查相机是否连接  <br /></td></tr>
+<tr class="separator:a4fe94d5ef8ef9724b74131ed31e67979"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af441caffda00e9126c486dddab0eee44" id="r_af441caffda00e9126c486dddab0eee44"><td class="memItemLeft" align="right" valign="top">const dvsense::CameraDescription&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af441caffda00e9126c486dddab0eee44">getDvsDesc</a> ()</td></tr>
+<tr class="memdesc:af441caffda00e9126c486dddab0eee44"><td class="mdescLeft">&#160;</td><td class="mdescRight">获取相机描述信息  <br /></td></tr>
+<tr class="separator:af441caffda00e9126c486dddab0eee44"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae07e7170da5a1c117a3665f8e871c2f9" id="r_ae07e7170da5a1c117a3665f8e871c2f9"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae07e7170da5a1c117a3665f8e871c2f9">addEventsStreamHandleCallback</a> (const dvsense::EventsStreamHandleCallback &amp;callback)</td></tr>
+<tr class="memdesc:ae07e7170da5a1c117a3665f8e871c2f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">添加一个回调函数来处理事件流  <br /></td></tr>
+<tr class="separator:ae07e7170da5a1c117a3665f8e871c2f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a06bd4f7f5db9ed3b6789b0d156b99a88" id="r_a06bd4f7f5db9ed3b6789b0d156b99a88"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a06bd4f7f5db9ed3b6789b0d156b99a88">removeEventsStreamHandleCallback</a> (uint32_t callback_id)</td></tr>
+<tr class="memdesc:a06bd4f7f5db9ed3b6789b0d156b99a88"><td class="mdescLeft">&#160;</td><td class="mdescRight">ͨ通过id来删除一个回调函数  <br /></td></tr>
+<tr class="separator:a06bd4f7f5db9ed3b6789b0d156b99a88"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac8c43a54d82966d8a5b4c46c42d57aa0" id="r_ac8c43a54d82966d8a5b4c46c42d57aa0"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac8c43a54d82966d8a5b4c46c42d57aa0">addTriggerInCallback</a> (const NewTriggerInCallback &amp;newTriggerInCallback)</td></tr>
+<tr class="memdesc:ac8c43a54d82966d8a5b4c46c42d57aa0"><td class="mdescLeft">&#160;</td><td class="mdescRight">添加一个回调函数来处理触发信号  <br /></td></tr>
+<tr class="separator:ac8c43a54d82966d8a5b4c46c42d57aa0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a18185cdf87337b7ec03d6a1cf9d80e" id="r_a7a18185cdf87337b7ec03d6a1cf9d80e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7a18185cdf87337b7ec03d6a1cf9d80e">removeTriggerInCallback</a> (uint32_t callback_id)</td></tr>
+<tr class="memdesc:a7a18185cdf87337b7ec03d6a1cf9d80e"><td class="mdescLeft">&#160;</td><td class="mdescRight">ͨ通过id来删除一个回调函数  <br /></td></tr>
+<tr class="separator:a7a18185cdf87337b7ec03d6a1cf9d80e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abc2beededee5744957079e4aacde0873" id="r_abc2beededee5744957079e4aacde0873"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abc2beededee5744957079e4aacde0873">addApsFrameCallback</a> (const FrameCallback &amp;frameCallback)</td></tr>
+<tr class="memdesc:abc2beededee5744957079e4aacde0873"><td class="mdescLeft">&#160;</td><td class="mdescRight">添加一个回调函数来处理aps数据  <br /></td></tr>
+<tr class="separator:abc2beededee5744957079e4aacde0873"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab27deadd3e41df4a5e1be7f179cee717" id="r_ab27deadd3e41df4a5e1be7f179cee717"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab27deadd3e41df4a5e1be7f179cee717">removeApsFrameCallback</a> (uint32_t callback_id)</td></tr>
+<tr class="memdesc:ab27deadd3e41df4a5e1be7f179cee717"><td class="mdescLeft">&#160;</td><td class="mdescRight">ͨ通过id来删除一个回调函数  <br /></td></tr>
+<tr class="separator:ab27deadd3e41df4a5e1be7f179cee717"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac92d3b835636641550b12b0f93daf21d" id="r_ac92d3b835636641550b12b0f93daf21d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac92d3b835636641550b12b0f93daf21d">start</a> ()</td></tr>
+<tr class="memdesc:ac92d3b835636641550b12b0f93daf21d"><td class="mdescLeft">&#160;</td><td class="mdescRight">开启相机  <br /></td></tr>
+<tr class="separator:ac92d3b835636641550b12b0f93daf21d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac7d9d6115f0289acf02d228d0ba70d5e" id="r_ac7d9d6115f0289acf02d228d0ba70d5e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac7d9d6115f0289acf02d228d0ba70d5e">startRecording</a> (std::string output_dir=&quot;&quot;)</td></tr>
+<tr class="memdesc:ac7d9d6115f0289acf02d228d0ba70d5e"><td class="mdescLeft">&#160;</td><td class="mdescRight">开始录制事件流  <br /></td></tr>
+<tr class="separator:ac7d9d6115f0289acf02d228d0ba70d5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae51416af540512a3ba419ad44754360e" id="r_ae51416af540512a3ba419ad44754360e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae51416af540512a3ba419ad44754360e">stop</a> ()</td></tr>
+<tr class="memdesc:ae51416af540512a3ba419ad44754360e"><td class="mdescLeft">&#160;</td><td class="mdescRight">ͣ停止相机  <br /></td></tr>
+<tr class="separator:ae51416af540512a3ba419ad44754360e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a38a9216d672ae71e7823ca1f3cc5c371" id="r_a38a9216d672ae71e7823ca1f3cc5c371"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a38a9216d672ae71e7823ca1f3cc5c371">stopRecording</a> ()</td></tr>
+<tr class="memdesc:a38a9216d672ae71e7823ca1f3cc5c371"><td class="mdescLeft">&#160;</td><td class="mdescRight">ͣ停止ֹ录制事件流  <br /></td></tr>
+<tr class="separator:a38a9216d672ae71e7823ca1f3cc5c371"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5adeed6cb3744dcf38a33d0db8765ec9" id="r_a5adeed6cb3744dcf38a33d0db8765ec9"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5adeed6cb3744dcf38a33d0db8765ec9">getWidth</a> ()</td></tr>
+<tr class="memdesc:a5adeed6cb3744dcf38a33d0db8765ec9"><td class="mdescLeft">&#160;</td><td class="mdescRight">获取相机传感器的宽度  <br /></td></tr>
+<tr class="separator:a5adeed6cb3744dcf38a33d0db8765ec9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a582515c664a3b6e5b6142e9d86238411" id="r_a582515c664a3b6e5b6142e9d86238411"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a582515c664a3b6e5b6142e9d86238411">getHeight</a> ()</td></tr>
+<tr class="memdesc:a582515c664a3b6e5b6142e9d86238411"><td class="mdescLeft">&#160;</td><td class="mdescRight">获取相机传感器的高度  <br /></td></tr>
+<tr class="separator:a582515c664a3b6e5b6142e9d86238411"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">详细描述</h2>
+<div class="textblock">
+<p class="definition">在文件 <a class="el" href="_dvs_rgb_fusion_camera_8hpp_source.html">DvsRgbFusionCamera.hpp</a> 第 <a class="el" href="_dvs_rgb_fusion_camera_8hpp_source.html#l00019">19</a> 行定义.</p>
+</div><h2 class="groupheader">构造及析构函数说明</h2>
+<a id="a537f6e74fed0a62d839dc41144b34be5" name="a537f6e74fed0a62d839dc41144b34be5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a537f6e74fed0a62d839dc41144b34be5">&#9670;&#160;</a></span>DvsRgbFusionCamera()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="class_dvs_rgb_fusion_camera.html">DvsRgbFusionCamera</a> </td>
+          <td>(</td>
+          <td class="paramtype">float</td>          <td class="paramname"><span class="paramname"><em>fps</em></span><span class="paramdefsep"> = </span><span class="paramdefval">30</span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>构造函数 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fps</td><td>相机帧率 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="reference">引用了 <a class="el" href="#a537f6e74fed0a62d839dc41144b34be5">DvsRgbFusionCamera()</a>.</p>
+
+<p class="reference">被这些函数引用 <a class="el" href="#a537f6e74fed0a62d839dc41144b34be5">DvsRgbFusionCamera()</a>.</p>
+<div class="dynheader">
+函数调用图:</div>
+<div class="dyncontent">
+<div class="center"><img src="class_dvs_rgb_fusion_camera_a537f6e74fed0a62d839dc41144b34be5_cgraph.png" border="0" usemap="#aclass_dvs_rgb_fusion_camera_a537f6e74fed0a62d839dc41144b34be5_cgraph" alt=""/></div>
+<map name="aclass_dvs_rgb_fusion_camera_a537f6e74fed0a62d839dc41144b34be5_cgraph" id="aclass_dvs_rgb_fusion_camera_a537f6e74fed0a62d839dc41144b34be5_cgraph">
+<area shape="rect" title="构造函数" alt="" coords="5,29,160,56"/>
+<area shape="poly" title=" " alt="" coords="56,30,51,21,54,11,65,5,83,3,101,5,111,12,108,16,99,10,82,8,67,10,58,15,56,20,60,28"/>
+</map>
+</div>
+<div class="dynheader">
+这是这个函数的调用关系图:</div>
+<div class="dyncontent">
+<div class="center"><img src="class_dvs_rgb_fusion_camera_a537f6e74fed0a62d839dc41144b34be5_icgraph.png" border="0" usemap="#aclass_dvs_rgb_fusion_camera_a537f6e74fed0a62d839dc41144b34be5_icgraph" alt=""/></div>
+<map name="aclass_dvs_rgb_fusion_camera_a537f6e74fed0a62d839dc41144b34be5_icgraph" id="aclass_dvs_rgb_fusion_camera_a537f6e74fed0a62d839dc41144b34be5_icgraph">
+<area shape="rect" title="构造函数" alt="" coords="5,29,160,56"/>
+<area shape="poly" title=" " alt="" coords="108,16,99,10,82,8,67,10,58,15,56,20,60,28,56,30,51,21,54,11,65,5,83,3,101,5,111,12"/>
+</map>
+</div>
+
+</div>
+</div>
+<h2 class="groupheader">成员函数说明</h2>
+<a id="abc2beededee5744957079e4aacde0873" name="abc2beededee5744957079e4aacde0873"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abc2beededee5744957079e4aacde0873">&#9670;&#160;</a></span>addApsFrameCallback()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int addApsFrameCallback </td>
+          <td>(</td>
+          <td class="paramtype">const FrameCallback &amp;</td>          <td class="paramname"><span class="paramname"><em>frameCallback</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>添加一个回调函数来处理aps数据 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cb</td><td>回调函数 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>返回</dt><dd>回调函数id，使用此id可以调用 <a class="el" href="#ab27deadd3e41df4a5e1be7f179cee717">removeApsFrameCallback</a> 来移除回调函数 </dd></dl>
+
+</div>
+</div>
+<a id="ae07e7170da5a1c117a3665f8e871c2f9" name="ae07e7170da5a1c117a3665f8e871c2f9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae07e7170da5a1c117a3665f8e871c2f9">&#9670;&#160;</a></span>addEventsStreamHandleCallback()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t addEventsStreamHandleCallback </td>
+          <td>(</td>
+          <td class="paramtype">const dvsense::EventsStreamHandleCallback &amp;</td>          <td class="paramname"><span class="paramname"><em>callback</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>添加一个回调函数来处理事件流 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cb</td><td>回调函数 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>返回</dt><dd>回调函数id，使用此id可以调用 <a class="el" href="#a06bd4f7f5db9ed3b6789b0d156b99a88">removeEventsStreamHandleCallback</a> 来移除回调函数 </dd></dl>
+
+</div>
+</div>
+<a id="ac8c43a54d82966d8a5b4c46c42d57aa0" name="ac8c43a54d82966d8a5b4c46c42d57aa0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac8c43a54d82966d8a5b4c46c42d57aa0">&#9670;&#160;</a></span>addTriggerInCallback()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t addTriggerInCallback </td>
+          <td>(</td>
+          <td class="paramtype">const NewTriggerInCallback &amp;</td>          <td class="paramname"><span class="paramname"><em>newTriggerInCallback</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>添加一个回调函数来处理触发信号 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cb</td><td>回调函数 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>返回</dt><dd>回调函数id，使用此id可以调用 <a class="el" href="#a7a18185cdf87337b7ec03d6a1cf9d80e">removeTriggerInCallback</a> 来移除回调函数 </dd></dl>
+
+</div>
+</div>
+<a id="af441caffda00e9126c486dddab0eee44" name="af441caffda00e9126c486dddab0eee44"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af441caffda00e9126c486dddab0eee44">&#9670;&#160;</a></span>getDvsDesc()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const dvsense::CameraDescription getDvsDesc </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>获取相机描述信息 </p>
+<dl class="section return"><dt>返回</dt><dd>CameraDescription </dd></dl>
+
+<p class="definition">在文件 <a class="el" href="_dvs_rgb_fusion_camera_8hpp_source.html">DvsRgbFusionCamera.hpp</a> 第 <a class="el" href="_dvs_rgb_fusion_camera_8hpp_source.html#l00046">46</a> 行定义.</p>
+
+</div>
+</div>
+<a id="a582515c664a3b6e5b6142e9d86238411" name="a582515c664a3b6e5b6142e9d86238411"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a582515c664a3b6e5b6142e9d86238411">&#9670;&#160;</a></span>getHeight()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t getHeight </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>获取相机传感器的高度 </p>
+<dl class="section return"><dt>返回</dt><dd>uint16_t </dd></dl>
+
+</div>
+</div>
+<a id="a5adeed6cb3744dcf38a33d0db8765ec9" name="a5adeed6cb3744dcf38a33d0db8765ec9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5adeed6cb3744dcf38a33d0db8765ec9">&#9670;&#160;</a></span>getWidth()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t getWidth </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>获取相机传感器的宽度 </p>
+<dl class="section return"><dt>返回</dt><dd>uint16_t </dd></dl>
+
+</div>
+</div>
+<a id="a4fe94d5ef8ef9724b74131ed31e67979" name="a4fe94d5ef8ef9724b74131ed31e67979"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4fe94d5ef8ef9724b74131ed31e67979">&#9670;&#160;</a></span>isConnected()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const bool isConnected </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>检查相机是否连接 </p>
+<dl class="section return"><dt>返回</dt><dd>如果连接则返回true，否则返回false </dd></dl>
+
+</div>
+</div>
+<a id="ab27deadd3e41df4a5e1be7f179cee717" name="ab27deadd3e41df4a5e1be7f179cee717"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab27deadd3e41df4a5e1be7f179cee717">&#9670;&#160;</a></span>removeApsFrameCallback()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool removeApsFrameCallback </td>
+          <td>(</td>
+          <td class="paramtype">uint32_t</td>          <td class="paramname"><span class="paramname"><em>callback_id</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>ͨ通过id来删除一个回调函数 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">callback_id</td><td>回调函数id </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>返回</dt><dd>如果成功移除则返回true </dd>
+<dd>
+如果回调函数列表中没有对应id的回调函数，则返回false </dd></dl>
+
+</div>
+</div>
+<a id="a06bd4f7f5db9ed3b6789b0d156b99a88" name="a06bd4f7f5db9ed3b6789b0d156b99a88"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a06bd4f7f5db9ed3b6789b0d156b99a88">&#9670;&#160;</a></span>removeEventsStreamHandleCallback()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool removeEventsStreamHandleCallback </td>
+          <td>(</td>
+          <td class="paramtype">uint32_t</td>          <td class="paramname"><span class="paramname"><em>callback_id</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>ͨ通过id来删除一个回调函数 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">callback_id</td><td>回调函数id </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>返回</dt><dd>如果成功移除则返回true </dd>
+<dd>
+如果回调函数列表中没有对应id的回调函数，则返回false </dd></dl>
+
+</div>
+</div>
+<a id="a7a18185cdf87337b7ec03d6a1cf9d80e" name="a7a18185cdf87337b7ec03d6a1cf9d80e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7a18185cdf87337b7ec03d6a1cf9d80e">&#9670;&#160;</a></span>removeTriggerInCallback()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool removeTriggerInCallback </td>
+          <td>(</td>
+          <td class="paramtype">uint32_t</td>          <td class="paramname"><span class="paramname"><em>callback_id</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>ͨ通过id来删除一个回调函数 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">callback_id</td><td>回调函数id </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>返回</dt><dd>如果成功移除则返回true </dd>
+<dd>
+如果回调函数列表中没有对应id的回调函数，则返回false </dd></dl>
+
+</div>
+</div>
+<a id="ac92d3b835636641550b12b0f93daf21d" name="ac92d3b835636641550b12b0f93daf21d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac92d3b835636641550b12b0f93daf21d">&#9670;&#160;</a></span>start()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int start </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>开启相机 </p>
+<dl class="section return"><dt>返回</dt><dd>int 如果成功开启则返回0，否则返回错误代码 </dd></dl>
+
+</div>
+</div>
+<a id="ac7d9d6115f0289acf02d228d0ba70d5e" name="ac7d9d6115f0289acf02d228d0ba70d5e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac7d9d6115f0289acf02d228d0ba70d5e">&#9670;&#160;</a></span>startRecording()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int startRecording </td>
+          <td>(</td>
+          <td class="paramtype">std::string</td>          <td class="paramname"><span class="paramname"><em>output_dir</em></span><span class="paramdefsep"> = </span><span class="paramdefval">&quot;&quot;</span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>开始录制事件流 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">file_path</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>返回</dt><dd>int 如果成功录制则返回0，否则返回错误代码 </dd></dl>
+
+</div>
+</div>
+<a id="ae51416af540512a3ba419ad44754360e" name="ae51416af540512a3ba419ad44754360e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae51416af540512a3ba419ad44754360e">&#9670;&#160;</a></span>stop()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int stop </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>ͣ停止相机 </p>
+<dl class="section return"><dt>返回</dt><dd>int 如果成功停止则返回0，否则返回错误代码 </dd></dl>
+
+</div>
+</div>
+<a id="a38a9216d672ae71e7823ca1f3cc5c371" name="a38a9216d672ae71e7823ca1f3cc5c371"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a38a9216d672ae71e7823ca1f3cc5c371">&#9670;&#160;</a></span>stopRecording()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int stopRecording </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>ͣ停止ֹ录制事件流 </p>
+<dl class="section return"><dt>返回</dt><dd>int 如果成功停止录制则返回0，否则返回错误代码 </dd></dl>
+
+</div>
+</div>
+<hr/>该类的文档由以下文件生成:<ul>
+<li>D:/FusionCamera/dvsense_fusion_combo_sdk/include/camera_manager/<a class="el" href="_dvs_rgb_fusion_camera_8hpp_source.html">DvsRgbFusionCamera.hpp</a></li>
+</ul>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="class_dvs_rgb_fusion_camera.html">DvsRgbFusionCamera</a></li>
+    <li class="footer">制作者 <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.13.2 </li>
+  </ul>
+</div>
+</body>
+</html>
