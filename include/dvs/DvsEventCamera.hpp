@@ -25,7 +25,7 @@
 #include "DvsenseHal/camera/tools/CameraTool.h"
 
 
-using NewTriggerInCallback = std::function<void(const dvsense::EventTriggerIn* begin)>;
+using NewTriggerInCallback = std::function<void(const dvsense::EventTriggerIn& begin)>;
 
 namespace dvsense 
 {

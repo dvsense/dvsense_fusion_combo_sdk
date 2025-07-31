@@ -15,7 +15,6 @@
 #define DVSENSE_API
 #endif // _WIN32
 
-
 class DVSENSE_API DvsRgbFusionCamera
 {
 public:
@@ -154,7 +153,7 @@ public:
 	 * \~chinese @brief 获取相机传感器的宽度
 	 * \~chinese @return uint16_t
 	 */
-	uint16_t getWidth();
+	uint16_t getWidth(dvsense::STREAM_TYPE type = dvsense::DVS_STREAM);
 
 	/**
 	 * \~english @brief Get the Height of the camera sensor
@@ -162,7 +161,7 @@ public:
 	 * \~chinese @brief 获取相机传感器的高度
 	 * \~chinese @return uint16_t
 	 */
-	uint16_t getHeight();
+	uint16_t getHeight(dvsense::STREAM_TYPE type = dvsense::DVS_STREAM);
 
 private:
 	std::shared_ptr<dvsense::DvsEventCamera> dvs_camera_;
@@ -195,3 +194,6 @@ private:
 	dvsense::TimeStamp aps_save_ts_offset_;
 
 };
+
+
+typedef DVSENSE_API std::shared_ptr<DvsRgbFusionCamera> DvsRgbCameraDevice;
