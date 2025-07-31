@@ -37,6 +37,67 @@ bool HikCamera::findCamera() {
         return false;
     }
 
+    ret = MV_CC_OpenDevice(aps_camera_handle_);
+    if (ret != MV_OK) {
+        std::cout << "MV_CC_OpenDevice fail! ret = 0x" << std::hex << ret << std::endl;
+        return -1;
+    }
+
+    ret = MV_CC_SetImageNodeNum(aps_camera_handle_, 100);
+    if (ret != MV_OK) {
+        std::cout << "Set image node num failed fail! ret = " << ret << std::endl;
+        return -1;
+    }
+
+    // set the trigger mode to off
+    ret = MV_CC_SetEnumValue(aps_camera_handle_, "TriggerMode", MV_TRIGGER_MODE_OFF);
+    //Set HB mode to off
+    ret = MV_CC_SetEnumValue(aps_camera_handle_, "ImageCompressionMode", 0);
+
+    // set frame rate to 30 FPS
+    ret = MV_CC_SetFloatValue(aps_camera_handle_, "AcquisitionFrameRate", fps_);
+    std::cout << "Aps frame fps is: " << fps_ << std::endl;
+    if (ret != MV_OK) {
+        std::cout << "Frame rate set failed fail! ret = " << ret << std::endl;
+        return -1;
+    }
+
+    ret = MV_CC_SetBoolValue(aps_camera_handle_, "AcquisitionFrameRateEnable", true);
+    if (ret != MV_OK) {
+        std::cout << "Frame rate enable fail! ret = " << ret << std::endl;
+        return -1;
+    }
+    // flip X
+    //ret = MV_CC_SetBoolValue(aps_camera_handle_, "ReverseX", true);
+
+    //Auto Exposure
+    ret = MV_CC_SetIntValue(aps_camera_handle_, "AutoExposureTimeUpperLimit", 15000);
+    ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "ExposureAuto", "Continuous");
+
+    //// Gain
+    ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "GainAuto", "Continuous");
+
+    //// Trigger settings
+    ret = MV_CC_SetEnumValue(aps_camera_handle_, "LineSelector", 1);
+    if (ret != MV_OK) {
+        std::cout << "MV_CC_SetEnumValue LineSelector fail! ret = " << ret << std::endl;
+    }
+
+    ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "LineMode", "Strobe");
+    if (ret != MV_OK) {
+        std::cout << "LineMode fail! ret = " << ret << std::endl;
+    }
+
+    ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "LineSource", "ExposureStartActive");
+    if (ret != MV_OK) {
+        std::cout << "MV_CC_SetEnumValue LineSource fail! ret = " << ret << std::endl;
+    }
+
+    ret = MV_CC_SetBoolValue(aps_camera_handle_, "StrobeEnable", true);
+    if (ret != MV_OK) {
+        std::cout << "MV_CC_SetEnable fail! ret = " << ret << std::endl;
+    }
+
     return true;
 }
 
@@ -122,73 +183,12 @@ int HikCamera::getNextFrame(FrameAndDrop& frame_and_drops) {
 }
 
 int HikCamera::startCamera() {
-    int ret = MV_CC_OpenDevice(aps_camera_handle_);
-    if (ret != MV_OK) {
-        std::cout << "MV_CC_OpenDevice fail! ret = 0x" << std::hex << ret << std::endl;
-        return -1;
-    }
-
-    ret = MV_CC_SetImageNodeNum(aps_camera_handle_, 100);
-    if (ret != MV_OK) {
-        std::cout << "Set image node num failed fail! ret = " << ret << std::endl;
-        return -1;
-    }
-
-    // set the trigger mode to off
-    ret = MV_CC_SetEnumValue(aps_camera_handle_, "TriggerMode", MV_TRIGGER_MODE_OFF);
-    //Set HB mode to off
-    ret = MV_CC_SetEnumValue(aps_camera_handle_, "ImageCompressionMode", 0);
-
-    // set frame rate to 30 FPS
-    ret = MV_CC_SetFloatValue(aps_camera_handle_, "AcquisitionFrameRate", fps_);
-    std::cout << "Aps frame fps is: " << fps_ << std::endl;
-    if (ret != MV_OK) {
-        std::cout << "Frame rate set failed fail! ret = " << ret << std::endl;
-        return -1;
-    }
-
-    ret = MV_CC_SetBoolValue(aps_camera_handle_, "AcquisitionFrameRateEnable", true);
-    if (ret != MV_OK) {
-        std::cout << "Frame rate enable fail! ret = " << ret << std::endl;
-        return -1;
-    }
-    // flip X
-    //ret = MV_CC_SetBoolValue(aps_camera_handle_, "ReverseX", true);
-
-    //Auto Exposure
-    ret = MV_CC_SetIntValue(aps_camera_handle_, "AutoExposureTimeUpperLimit", 15000);
-    ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "ExposureAuto", "Continuous");
-
-    //// Gain
-    ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "GainAuto", "Continuous");
-
-    //// Trigger settings
-    ret = MV_CC_SetEnumValue(aps_camera_handle_, "LineSelector", 1);
-    if (ret != MV_OK) {
-        std::cout << "MV_CC_SetEnumValue LineSelector fail! ret = " << ret << std::endl;
-    }
-
-    ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "LineMode", "Strobe");
-    if (ret != MV_OK) {
-        std::cout << "LineMode fail! ret = " << ret << std::endl;
-    }
-
-    ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "LineSource", "ExposureStartActive");
-    if (ret != MV_OK) {
-        std::cout << "MV_CC_SetEnumValue LineSource fail! ret = " << ret << std::endl;
-    }
-
-    ret = MV_CC_SetBoolValue(aps_camera_handle_, "StrobeEnable", true);
-    if (ret != MV_OK) {
-        std::cout << "MV_CC_SetEnable fail! ret = " << ret << std::endl;
-    }
-
-    ret = MV_CC_StartGrabbing(aps_camera_handle_);
+    int ret = MV_CC_StartGrabbing(aps_camera_handle_);
     if (ret != MV_OK) {
         std::cout << "MV_CC_StartGrabbing fail! ret = " << ret << std::endl;
         return -1;
     }
-
+    
     is_grab_image_thread_running_ = true;
 
     grab_frame_thread_ = std::thread(

@@ -96,10 +96,10 @@ namespace dvsense
 
     uint32_t DvsEventCamera::addTriggerInCallback(NewTriggerInCallback newTriggerInCallback)
     {
+        trigger_in_callback_id_num_++;
         new_trigger_in_callbacks_.insert(
             { trigger_in_callback_id_num_, newTriggerInCallback }
         );
-        trigger_in_callback_id_num_++;
         return trigger_in_callback_id_num_;
     }
 
@@ -120,7 +120,7 @@ namespace dvsense
                 static int  trigger_num = 0;
                 for (auto trigger : new_trigger_in_callbacks_)
                 {
-                    trigger.second(&begin);
+                    trigger.second(begin);
                 }
             }
         );

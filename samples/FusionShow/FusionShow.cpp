@@ -66,8 +66,8 @@ int main()
 	}
 	// dvsense::CameraDescription camera_desc = fusionCamera->getDvsDesc();
 
-	uint16_t dvs_width = fusionCamera->getWidth();
-	uint16_t dvs_height = fusionCamera->getHeight();
+	uint16_t dvs_width = fusionCamera->getWidth(dvsense::DVS_STREAM);
+	uint16_t dvs_height = fusionCamera->getHeight(dvsense::DVS_STREAM);
 
 	cv::Mat display;
 	std::mutex dvs_frame_mutex;

@@ -61,7 +61,7 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
     endif()
 endif()
 
-find_package(FFmpeg REQUIRED)
+# find_package(FFmpeg REQUIRED)
 find_library(AVCODEC_LIB 
     NAMES avcodec libavcodec
     HINTS ${FFMPEG_DIR}/lib
