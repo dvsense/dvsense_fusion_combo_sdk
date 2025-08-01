@@ -255,3 +255,16 @@ uint16_t DvsRgbFusionCamera::getHeight(dvsense::STREAM_TYPE type)
         throw std::invalid_argument("Unknown STREAM_TYPE");
     }
 }
+
+const std::shared_ptr<dvsense::CameraTool> DvsRgbFusionCamera::getTool(dvsense::ToolType type)
+{
+    return dvs_camera_->getTool(type);
+}
+
+int DvsRgbFusionCamera::destroy()
+{
+    dvs_camera_.reset();
+    int ret = rgb_camera_->destroyCamera();
+    rgb_camera_.reset();
+    return ret;
+}

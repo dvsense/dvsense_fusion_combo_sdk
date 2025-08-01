@@ -17,6 +17,8 @@ public:
 
 	virtual void stopCamera() = 0;
 
+	virtual int destroyCamera() = 0;
+
 	virtual bool getNewRgbFrame(cv::Mat& output_frame) = 0;
 
 	static std::unique_ptr<RgbCamera> create(float fps);

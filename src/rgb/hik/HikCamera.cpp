@@ -234,12 +234,20 @@ void HikCamera::stopCamera() {
     int ret = 0;
     ret = MV_CC_StopGrabbing(aps_camera_handle_);
     if (ret != 0) std::cout << "MV_CC_StopGrabbing failed, error code: " << ret << std::endl;
+}
+
+int HikCamera::destroyCamera() {
+    is_grab_image_thread_running_ = false;
+    if (grab_frame_thread_.joinable()) grab_frame_thread_.join();
+    int ret = 0;
+    ret = MV_CC_StopGrabbing(aps_camera_handle_);
+    if (ret != 0) std::cout << "MV_CC_StopGrabbing failed, error code: " << ret << std::endl;
     ret = MV_CC_CloseDevice(aps_camera_handle_);
     if (ret != 0) std::cout << "MV_CC_CloseDevice failed, error code: " << ret << std::endl;
     ret = MV_CC_DestroyHandle(aps_camera_handle_);
     if (ret != 0) std::cout << "MV_CC_DestroyHandle failed, error code: " << ret << std::endl;
     aps_camera_handle_ = nullptr;
-    std::cout << "stop camera" << std::endl;
+    return ret;
 }
 
 bool HikCamera::getNewRgbFrame(cv::Mat& output_frame) {

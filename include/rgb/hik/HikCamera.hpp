@@ -38,6 +38,8 @@ public:
 
     int getHeight() override;
 
+    int destroyCamera() override;
+
 private:
     void* aps_camera_handle_ = nullptr;
     MV_FRAME_OUT frame_out_ = { 0 };
