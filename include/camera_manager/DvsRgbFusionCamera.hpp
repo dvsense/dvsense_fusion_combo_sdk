@@ -6,7 +6,6 @@
 
 #include "DvsEventCamera.hpp"
 #include "RgbCamera.hpp"
-#include "ApsTypes.hpp"
 #include "DataToVideo.hpp"
 
 #ifdef _WIN32
@@ -14,6 +13,8 @@
 #else
 #define DVSENSE_API
 #endif // _WIN32
+
+using FrameCallback = std::function<void(dvsense::ApsFrame&)>;
 
 class DVSENSE_API DvsRgbFusionCamera
 {

@@ -70,7 +70,7 @@ int DvsRgbFusionCamera::start()
         aps_is_recording_ = false;
     }
     addApsFrameCallback(
-        [this](const RgbFrame& rgb_frame) {
+        [this](const dvsense::ApsFrame& rgb_frame) {
             if (aps_is_recording_) {
                 if (rgb_frame.getDataSize() != 0)
                 {
@@ -200,7 +200,7 @@ void DvsRgbFusionCamera::extTriggerSyncCallback()
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
 
-            RgbFrame rgb_frame(new_frame.cols, new_frame.rows, rise_trigger_timestamp, begin.timestamp, new_frame.data, new_frame.total() * new_frame.elemSize());
+            dvsense::ApsFrame rgb_frame(new_frame.cols, new_frame.rows, rise_trigger_timestamp, begin.timestamp, new_frame.data, new_frame.total() * new_frame.elemSize());
             if (rgb_frame.getDataSize() != 0)
             {
                 for (const auto& callback : frame_callbacks_) {
