@@ -127,5 +127,8 @@ namespace dvsense
 
     }
 
-}
+    std::shared_ptr<dvsense::CameraTool> DvsEventCamera::getTool(dvsense::ToolType type)
+    {
+        return dvs_camera_->getTool(type);
+    }
 

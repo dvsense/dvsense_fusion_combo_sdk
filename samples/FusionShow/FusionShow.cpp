@@ -174,6 +174,7 @@ int main()
 	}
 
 	fusionCamera->stop();
+	fusionCamera->destroy();
 	cv::destroyAllWindows();
 	return 0;
 }

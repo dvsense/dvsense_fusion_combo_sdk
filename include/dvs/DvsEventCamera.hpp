@@ -63,6 +63,8 @@ namespace dvsense
 
 		uint16_t getDvsHeight();
 
+		std::shared_ptr<dvsense::CameraTool> getTool(dvsense::ToolType type);
+
 
 	private:
 		dvsense::CameraDevice dvs_camera_;

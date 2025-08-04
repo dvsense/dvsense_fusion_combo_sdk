@@ -163,6 +163,18 @@ public:
 	 */
 	uint16_t getHeight(dvsense::STREAM_TYPE type = dvsense::DVS_STREAM);
 
+	/**
+	 * \~english @brief Get the tool
+	 * \~english @param type tool type
+	 * \~english @return std::shared_ptr<CameraTool> tool
+	 * \~chinese @brief 获取工具
+	 * \~chinese @param type 工具类型
+	 * \~chinese @return std::shared_ptr<CameraTool> 工具
+	 */
+	const std::shared_ptr<dvsense::CameraTool> getTool(dvsense::ToolType type);
+
+	int destroy();
+
 private:
 	std::shared_ptr<dvsense::DvsEventCamera> dvs_camera_;
 	std::unique_ptr<RgbCamera> rgb_camera_;
