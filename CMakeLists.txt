@@ -35,7 +35,7 @@ set(CAMERA_MANAGER_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/dvs
 
 message(STATUS "CAMERA_MANAGER_INCLUDE_DIR: ${CAMERA_MANAGER_INCLUDE_DIR}")
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/samples)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     # 设置Debug构建类型的编译选项
@@ -87,8 +87,7 @@ add_library(DvsRgbFusionCamera SHARED
     "src/camera_manager/DvsRgbFusionCamera.cpp"
     "src/dvs/DvsEventCamera.cpp"
     "src/rgb/hik/HikCamera.cpp"
-    "src/rgb/RgbCamera.cpp"
-    "src/rgb/ApsTypes.cpp"
+    "src/rgb/RgbCamera.cpp"   
     "src/camera_manager/DataToVideo.cpp" )
 
 find_package(OpenCV REQUIRED)

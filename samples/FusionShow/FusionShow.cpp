@@ -83,7 +83,7 @@ int main()
 	);
 
 	fusionCamera->addApsFrameCallback(
-		[&buffer_show, &new_dvs_frame, &dvs_width, &dvs_height, &dvs_frame_mutex, &display_image_mutex](const RgbFrame& rgbframe)
+		[&buffer_show, &new_dvs_frame, &dvs_width, &dvs_height, &dvs_frame_mutex, &display_image_mutex](const dvsense::ApsFrame& rgbframe)
 		{
 			if (rgbframe.getDataSize() != 0 && buffer_show.empty())
 			{
