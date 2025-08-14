@@ -13,9 +13,9 @@
 
 struct DVSENSE_API CameraParams
 {
-	cv::Mat k;
-	cv::Mat r;
-	cv::Mat t;
+	cv::Mat camera_matrix;
+	cv::Mat rotation;
+	cv::Mat translation;
 };
 
 class DVSENSE_API CalibrateThroughFile
@@ -29,9 +29,9 @@ public:
 
 	~CalibrateThroughFile();
 
-	cv::Mat getDvsToApsH(double);
+	cv::Mat getDvsToApsHomographyMatrix(double);
 
-	cv::Mat getApsToDvsH(double);
+	cv::Mat getApsToDvsHomographyMatrix(double);
 
 	cv::Mat warpImage(const cv::Mat&, const cv::Mat&, cv::Size); 
 

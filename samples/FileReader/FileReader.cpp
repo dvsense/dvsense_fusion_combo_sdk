@@ -69,7 +69,7 @@ int main() {
 	bool is_calibrator = true;
 
 	std::unique_ptr<CalibrateThroughFile> calibrator = std::make_unique<CalibrateThroughFile>("D:/FusionCamera/dvsense_fusion_combo_sdk/calibration_result.json");
-	cv::Mat H = calibrator->getApsToDvsH(600);
+	cv::Mat H = calibrator->getApsToDvsHomographyMatrix(600);
 
 	EventAnalyzer event_analyzer;
 	int dvs_width = reader->getWidth();
