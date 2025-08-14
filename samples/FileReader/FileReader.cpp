@@ -6,6 +6,7 @@
 #include <opencv2/core/utility.hpp>
 #include "DvsenseDriver/FileReader/DvsFileReader.h"
 #include "DvsenseBase/logging/logger.hh"
+#include "CalibrateThroughFile.hpp"
 
 class EventAnalyzer {
 public:
@@ -51,8 +52,8 @@ public:
 };
 
 int main() {
-	cv::VideoCapture cap("D:/FusionCamera/test_datas/fusion-2025-07-28_14_52_33.mp4", cv::CAP_FFMPEG);
-	std::string event_file_path = "D:/FusionCamera/test_datas/fusion-2025-07-28_14_52_33.raw";
+	cv::VideoCapture cap("D:/FusionCamera/test_datas/fusion-2025-08-14_15_14_35.mp4", cv::CAP_FFMPEG);
+	std::string event_file_path = "D:/FusionCamera/test_datas/fusion-2025-08-14_15_14_35.raw";
 	if (!cap.isOpened()) {
 		std::cerr << "Error: Could not open video file." << std::endl;
 		return -1;
@@ -65,8 +66,15 @@ int main() {
 		return -1;
 	}
 
+	bool is_calibrator = true;
+
+	std::unique_ptr<CalibrateThroughFile> calibrator = std::make_unique<CalibrateThroughFile>("D:/FusionCamera/dvsense_fusion_combo_sdk/calibration_result.json");
+	cv::Mat H = calibrator->getApsToDvsH(600);
+
 	EventAnalyzer event_analyzer;
-	event_analyzer.setup_display(reader->getWidth(), reader->getHeight());
+	int dvs_width = reader->getWidth();
+	int dvs_height = reader->getHeight();
+	event_analyzer.setup_display(dvs_width, dvs_height);
 
 	const int fps = 60; // event-based cameras do not have a frame rate, but we need one for visualization
 	const int wait_time = static_cast<int>(std::round(1.f / fps * 1000)); // how long we should wait between two frames
@@ -95,12 +103,20 @@ int main() {
 		}
 		event_analyzer.get_display_frame(new_dvs_frame);
 
-		int y_start = (frame.rows - new_dvs_frame.rows) / 2;
-		int x_start = (frame.cols - new_dvs_frame.cols) / 2;
-
-		frame(cv::Rect(x_start, y_start, new_dvs_frame.cols, new_dvs_frame.rows)).copyTo(new_aps_frame);
-		new_aps_frame.setTo(cv::Scalar(0, 0, 0), new_dvs_frame);
-		new_aps_frame = new_aps_frame + new_dvs_frame;
+		if (!is_calibrator) 
+		{
+			int y_start = (frame.rows - new_dvs_frame.rows) / 2;
+			int x_start = (frame.cols - new_dvs_frame.cols) / 2;
+			frame(cv::Rect(x_start, y_start, new_dvs_frame.cols, new_dvs_frame.rows)).copyTo(new_aps_frame);
+			new_aps_frame.setTo(cv::Scalar(0, 0, 0), new_dvs_frame);
+			new_aps_frame = new_aps_frame + new_dvs_frame;		
+		}
+		else
+		{
+			cv::Mat img_warped = calibrator->warpImage(frame, H, cv::Size(dvs_width, dvs_height));
+			img_warped.setTo(cv::Scalar(0, 0, 0), new_dvs_frame);
+			new_aps_frame = img_warped + new_dvs_frame;
+		}
 
 		cv::imshow(window_name, new_aps_frame);
 

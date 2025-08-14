@@ -45,3 +45,4 @@ out/
 .vscode/
 log
 build
+/CMakeSettings.json

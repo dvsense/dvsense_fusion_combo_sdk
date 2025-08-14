@@ -3,7 +3,9 @@ project(DvsFileReader)
 
 add_executable(FileReader FileReader.cpp)
 target_link_libraries(FileReader 
+PRIVATE
     DvsRgbFusionCamera
+    CalibrateThroughFile
     ${OpenCV_LIBS}
 )
 

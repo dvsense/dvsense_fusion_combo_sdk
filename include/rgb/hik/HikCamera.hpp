@@ -58,8 +58,6 @@ private:
     unsigned long long last_frame_id_ = -1;
     std::queue<FrameAndDrop> aps_frames_drop_;
 
-    int trigger_num_ = 0;
-
 
 
 

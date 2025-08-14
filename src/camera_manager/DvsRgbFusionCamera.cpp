@@ -175,6 +175,7 @@ int DvsRgbFusionCamera::stopRecording() {
     dvs_camera_->stopRecording();
 
     aps_is_recording_ = false;
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     aps_to_mp4_->flushAndCloseVideo();
 
     return 0;

@@ -1,12 +1,13 @@
 #include "DvsRgbFusionCamera.hpp"
+#include "CalibrateThroughFile.hpp"
 
-//cv::Vec3b color_bg = cv::Vec3b(0x00, 0x00, 0x00);
-//cv::Vec3b color_on = cv::Vec3b(0xff, 0x00, 0xff);
-//cv::Vec3b color_off = cv::Vec3b(0x00, 0xff, 0x00);
+cv::Vec3b color_bg = cv::Vec3b(0x00, 0x00, 0x00);
+cv::Vec3b color_on = cv::Vec3b(0xff, 0x00, 0xff);
+cv::Vec3b color_off = cv::Vec3b(0x00, 0xff, 0x00);
 
-cv::Vec3b color_bg = cv::Vec3b(0x70, 0x70, 0x70);
-cv::Vec3b color_on = cv::Vec3b(0xbf, 0xbc, 0xb4);
-cv::Vec3b color_off = cv::Vec3b(0x40, 0x3d, 0x33);
+//cv::Vec3b color_bg = cv::Vec3b(0x70, 0x70, 0x70);
+//cv::Vec3b color_on = cv::Vec3b(0xbf, 0xbc, 0xb4);
+//cv::Vec3b color_off = cv::Vec3b(0x40, 0x3d, 0x33);
 
 class EventAnalyzer {
 public:
@@ -55,6 +56,11 @@ int main()
 {
 	std::string data_save_path = "D:/FusionCamera/test_datas";
 
+	bool is_calibrator = true;
+
+	std::unique_ptr<CalibrateThroughFile> calibrator = std::make_unique<CalibrateThroughFile>("D:/FusionCamera/dvsense_fusion_combo_sdk/calibration_result.json");
+	cv::Mat H = calibrator->getApsToDvsH(600);
+
 	std::queue<cv::Mat> buffer_show;
 	std::mutex display_image_mutex;
 
@@ -77,13 +83,13 @@ int main()
 		[&new_dvs_frame, &dvs_frame_mutex](const dvsense::EventIterator_t begin, const dvsense::EventIterator_t end) {
 			std::unique_lock<std::mutex> lock(dvs_frame_mutex);
 			for (auto it = begin; it != end; ++it) {
-				new_dvs_frame.at<cv::Vec3b>(it->y, it->x) = (it->polarity) ? color_on : color_off;
+				new_dvs_frame.at<cv::Vec3b>(it->y, it->x) = (it->polarity) ? color_on : color_off;			
 			}
 		}
 	);
 
 	fusionCamera->addApsFrameCallback(
-		[&buffer_show, &new_dvs_frame, &dvs_width, &dvs_height, &dvs_frame_mutex, &display_image_mutex](const dvsense::ApsFrame& rgbframe)
+		[&is_calibrator, &calibrator, &H, &buffer_show, &new_dvs_frame, &dvs_width, &dvs_height, &dvs_frame_mutex, &display_image_mutex](const dvsense::ApsFrame& rgbframe)
 		{
 			if (rgbframe.getDataSize() != 0 && buffer_show.empty())
 			{
@@ -103,24 +109,36 @@ int main()
 
 				cv::Mat reconstructed_image(aps_height, aps_width, CV_8UC3, const_cast<void*>(static_cast<const void*>(external_data)));
 
-				cv::Mat new_aps_frame;
-				int y_start = (aps_height - new_dvs_height) / 2;
-				int x_start = (aps_width - new_dvs_width) / 2;
-
 				static cv::Mat aps_resize;
-				reconstructed_image(cv::Rect(x_start, y_start, new_dvs_width, new_dvs_height)).copyTo(aps_resize);
-				cv::resize(aps_resize, aps_resize, cv::Size(dvs_width, dvs_height), cv::INTER_AREA);
 
+				if (!is_calibrator)
 				{
-					std::unique_lock<std::mutex> lock(dvs_frame_mutex);
-					aps_resize.setTo(cv::Scalar(0, 0, 0), new_dvs_frame);
-					aps_resize = aps_resize + new_dvs_frame;
-					//new_dvs_frame.copyTo(display);
-					new_dvs_frame.setTo(cv::Scalar(0, 0, 0));
+					int y_start = (aps_height - new_dvs_height) / 2;
+					int x_start = (aps_width - new_dvs_width) / 2;
+					reconstructed_image(cv::Rect(x_start, y_start, new_dvs_width, new_dvs_height)).copyTo(aps_resize);
+					cv::resize(aps_resize, aps_resize, cv::Size(dvs_width, dvs_height), cv::INTER_AREA);
+					{
+						std::unique_lock<std::mutex> lock(dvs_frame_mutex);
+						aps_resize.setTo(cv::Scalar(0, 0, 0), new_dvs_frame);
+						aps_resize = aps_resize + new_dvs_frame;
+						new_dvs_frame.setTo(cv::Scalar(0, 0, 0));
+					}
+					std::unique_lock<std::mutex> lock(display_image_mutex);
+					buffer_show.emplace(aps_resize);
 				}
-
-				std::unique_lock<std::mutex> lock(display_image_mutex);
-				buffer_show.emplace(aps_resize);
+				else
+				{
+					reconstructed_image.copyTo(aps_resize);
+					cv::Mat img_warped = calibrator->warpImage(aps_resize, H, cv::Size(dvs_width, dvs_height));
+					{
+						std::unique_lock<std::mutex> lock(dvs_frame_mutex);
+						img_warped.setTo(cv::Scalar(0, 0, 0), new_dvs_frame);
+						img_warped = img_warped + new_dvs_frame;
+						new_dvs_frame.setTo(cv::Scalar(0, 0, 0));
+					}
+					std::unique_lock<std::mutex> lock(display_image_mutex);
+					buffer_show.emplace(img_warped);
+				}
 			}
 			else
 			{

@@ -240,8 +240,7 @@ int HikCamera::destroyCamera() {
     is_grab_image_thread_running_ = false;
     if (grab_frame_thread_.joinable()) grab_frame_thread_.join();
     int ret = 0;
-    ret = MV_CC_StopGrabbing(aps_camera_handle_);
-    if (ret != 0) std::cout << "MV_CC_StopGrabbing failed, error code: " << ret << std::endl;
+    MV_CC_StopGrabbing(aps_camera_handle_);
     ret = MV_CC_CloseDevice(aps_camera_handle_);
     if (ret != 0) std::cout << "MV_CC_CloseDevice failed, error code: " << ret << std::endl;
     ret = MV_CC_DestroyHandle(aps_camera_handle_);
@@ -251,14 +250,6 @@ int HikCamera::destroyCamera() {
 }
 
 bool HikCamera::getNewRgbFrame(cv::Mat& output_frame) {
-    if (trigger_num_<10)
-    {
-        trigger_num_++;
-        std::unique_lock<std::mutex> lock(frame_buffer_mutex_);
-        aps_frames_drop_ = std::queue<FrameAndDrop>();
-        return true;
-    }
-
     if (!private_buffer_frames_.empty()) {
         //private_buffer_frames_.front().copyTo(output_frame);
         output_frame = private_buffer_frames_.front();
