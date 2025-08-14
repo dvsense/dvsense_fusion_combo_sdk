@@ -116,16 +116,16 @@ PUBLIC
     ${SWSCALE_LIB}
 )
 
-add_library(CalibrateThroughFile SHARED
-    "src/calibrator/CalibrateThroughFile.cpp"
+add_library(DvsRgbCalib SHARED
+    "src/DvsRgbCalib/CalibrateThroughFile.cpp"
 )
 
-target_include_directories(CalibrateThroughFile
+target_include_directories(DvsRgbCalib
 PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/calibrator
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/DvsRgbCalib/
 )
 
-target_link_libraries(CalibrateThroughFile 
+target_link_libraries(DvsRgbCalib 
 PUBLIC
     opencv_core
     opencv_imgproc
