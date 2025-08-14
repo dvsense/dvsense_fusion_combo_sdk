@@ -3,7 +3,9 @@ project(DvsFusionShow)
 
 add_executable(FusionShow FusionShow.cpp)
 target_link_libraries(FusionShow 
+PRIVATE
     DvsRgbFusionCamera
+    CalibrateThroughFile
     ${OpenCV_LIBS}
 )
 

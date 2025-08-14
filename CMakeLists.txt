@@ -83,17 +83,16 @@ find_library(SWSCALE_LIB
     REQUIRED
 )
 
+find_package(OpenCV REQUIRED)
+find_package(Boost COMPONENTS filesystem REQUIRED)
+find_package(DvsenseDriver COMPONENTS Driver REQUIRED)
+
 add_library(DvsRgbFusionCamera SHARED
     "src/camera_manager/DvsRgbFusionCamera.cpp"
     "src/dvs/DvsEventCamera.cpp"
     "src/rgb/hik/HikCamera.cpp"
     "src/rgb/RgbCamera.cpp"   
     "src/camera_manager/DataToVideo.cpp" )
-
-find_package(OpenCV REQUIRED)
-find_package(Boost COMPONENTS filesystem REQUIRED)
-find_package(DvsenseDriver COMPONENTS Driver REQUIRED)
-
 
 target_include_directories(DvsRgbFusionCamera
     PUBLIC
@@ -116,6 +115,22 @@ PUBLIC
     ${AVUTIL_LIB}
     ${SWSCALE_LIB}
 )
+
+add_library(CalibrateThroughFile SHARED
+    "src/calibrator/CalibrateThroughFile.cpp"
+)
+
+target_include_directories(CalibrateThroughFile
+PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/calibrator
+)
+
+target_link_libraries(CalibrateThroughFile 
+PUBLIC
+    opencv_core
+    opencv_imgproc
+) 
+
 
 option(BUILD_SAMPLES "Build samples" OFF)
 if (BUILD_SAMPLES)
