@@ -126,14 +126,17 @@ add_library(DvsRgbCalib SHARED
 
 target_include_directories(DvsRgbCalib
 PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/DvsRgbCalib/
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/DvsRgbCalib>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/DvsRgbCalib>
 )
 
 target_link_libraries(DvsRgbCalib 
 PUBLIC
-    opencv_core
-    opencv_imgproc
+    ${OpenCV_LIBS}
 ) 
+
+# Provide a namespaced ALIAS
+add_library(DvsRgbCalib::DvsRgbCalib ALIAS DvsRgbCalib)
 
 
 option(BUILD_SAMPLES "Build samples" OFF)
@@ -170,6 +173,15 @@ install(TARGETS DvsRgbFusionCamera
     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
+# Install the calibration library
+install(TARGETS DvsRgbCalib
+    EXPORT DvsRgbCalibTargets
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
 # Install public headers (preserve folder structure under include/)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
@@ -193,6 +205,12 @@ install(EXPORT DvsRgbFusionCameraTargets
         NAMESPACE DvsRgbFusionCamera::
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/DvsRgbFusionCamera)
 
+# Export calib targets
+install(EXPORT DvsRgbCalibTargets
+    FILE DvsRgbCalibTargets.cmake
+    NAMESPACE DvsRgbCalib::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/DvsRgbCalib)
+
 # Generate and install a basic Config and ConfigVersion file
 include(CMakePackageConfigHelpers)
 set(DVSRGBFUSIONCAMERA_CONFIG_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/DvsRgbFusionCamera)
@@ -210,6 +228,24 @@ install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/DvsRgbFusionCameraConfig.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/DvsRgbFusionCameraConfigVersion.cmake
     DESTINATION ${DVSRGBFUSIONCAMERA_CONFIG_INSTALL_DIR}
+)
+
+# Config for DvsRgbCalib
+set(DVSRGBCALIB_CONFIG_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/DvsRgbCalib)
+configure_package_config_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/DvsRgbCalibConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/DvsRgbCalibConfig.cmake
+    INSTALL_DESTINATION ${DVSRGBCALIB_CONFIG_INSTALL_DIR}
+)
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/DvsRgbCalibConfigVersion.cmake
+    VERSION 1.0.0
+    COMPATIBILITY SameMajorVersion
+)
+install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/DvsRgbCalibConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/DvsRgbCalibConfigVersion.cmake
+    DESTINATION ${DVSRGBCALIB_CONFIG_INSTALL_DIR}
 )
 
 # --------------------

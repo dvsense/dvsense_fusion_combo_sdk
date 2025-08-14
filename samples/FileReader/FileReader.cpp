@@ -6,7 +6,7 @@
 #include <opencv2/core/utility.hpp>
 #include "DvsenseDriver/FileReader/DvsFileReader.h"
 #include "DvsenseBase/logging/logger.hh"
-#include "CalibrateThroughFile.hpp"
+#include "DvsRgbCalib/CalibrateThroughFile.hpp"
 
 class EventAnalyzer {
 public:
