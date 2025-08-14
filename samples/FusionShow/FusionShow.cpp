@@ -1,4 +1,4 @@
-#include "DvsRgbFusionCamera.hpp"
+#include "DvsRgbFusionCamera/camera_manager/DvsRgbFusionCamera.hpp"
 #include "CalibrateThroughFile.hpp"
 
 cv::Vec3b color_bg = cv::Vec3b(0x00, 0x00, 0x00);

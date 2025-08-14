@@ -1,12 +1,13 @@
 #pragma once
+
 #include "opencv2/opencv.hpp"
 #include "opencv2/core.hpp"
 #include "opencv2/imgproc.hpp"
 #include "opencv2/videoio.hpp"
 
-#include "DvsEventCamera.hpp"
-#include "RgbCamera.hpp"
-#include "DataToVideo.hpp"
+#include "DvsRgbFusionCamera/dvs/DvsEventCamera.hpp"
+#include "DvsRgbFusionCamera/rgb/RgbCamera.hpp"
+#include "DvsRgbFusionCamera/camera_manager/DataToVideo.hpp"
 
 #ifdef _WIN32
 #define DVSENSE_API __declspec(dllexport)

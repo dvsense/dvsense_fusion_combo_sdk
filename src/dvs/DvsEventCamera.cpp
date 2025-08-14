@@ -1,4 +1,4 @@
-#include "DvsEventCamera.hpp"
+#include "DvsRgbFusionCamera/dvs/DvsEventCamera.hpp"
 
 namespace dvsense
 {

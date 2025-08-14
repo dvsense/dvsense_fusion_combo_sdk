@@ -1,4 +1,4 @@
-#include "DvsRgbFusionCamera.hpp"
+#include "DvsRgbFusionCamera/camera_manager/DvsRgbFusionCamera.hpp"
 
 
 DvsRgbFusionCamera::DvsRgbFusionCamera(float aps_fps): aps_fps_(aps_fps)

@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.8)
 project(fusion_camera)
 
+# Use standard install directories (bin, lib, include, etc.)
+include(GNUInstallDirs)
+
 if(WIN32)
     cmake_policy(SET CMP0091 NEW)
     set(CMAKE_USE_WIN32_MSVC_LONG_PATHS ON)
@@ -96,18 +99,16 @@ add_library(DvsRgbFusionCamera SHARED
 
 target_include_directories(DvsRgbFusionCamera
     PUBLIC
-    ${FFMPEG_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/dvs
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/rgb
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/camera_manager
-    ${MVS_INCLUDE_DIR}
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
+        $<BUILD_INTERFACE:${FFMPEG_DIR}/include>
+        $<BUILD_INTERFACE:${MVS_INCLUDE_DIR}>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 target_link_libraries(DvsRgbFusionCamera 
 PUBLIC
     ${MVS_LIB}
-    opencv_core
-    opencv_imgproc
+    ${OpenCV_LIBS}
     ${Boost_LIBRARIES}
     DvsenseDriver::Driver
     ${AVCODEC_LIB}
@@ -115,6 +116,9 @@ PUBLIC
     ${AVUTIL_LIB}
     ${SWSCALE_LIB}
 )
+
+# Provide a namespaced ALIAS for in-tree consumers matching the exported name
+add_library(DvsRgbFusionCamera::DvsRgbFusionCamera ALIAS DvsRgbFusionCamera)
 
 add_library(DvsRgbCalib SHARED
     "src/DvsRgbCalib/CalibrateThroughFile.cpp"
@@ -153,3 +157,71 @@ if(BUILD_DOCS)
         VERBATIM )
 endif()
 
+# --------------------
+# Install rules
+# --------------------
+
+# Install the shared library
+install(TARGETS DvsRgbFusionCamera
+    EXPORT DvsRgbFusionCameraTargets
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+# Install public headers (preserve folder structure under include/)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        FILES_MATCHING
+        PATTERN "*.h"
+        PATTERN "*.hpp")
+
+# Optionally install sample executables when built
+if (BUILD_SAMPLES)
+    if (TARGET FusionShow)
+        install(TARGETS FusionShow RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+    endif()
+    if (TARGET FileReader)
+        install(TARGETS FileReader RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+    endif()
+endif()
+
+# Export targets for use by other CMake projects (basic export without full package config)
+install(EXPORT DvsRgbFusionCameraTargets
+        FILE DvsRgbFusionCameraTargets.cmake
+        NAMESPACE DvsRgbFusionCamera::
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/DvsRgbFusionCamera)
+
+# Generate and install a basic Config and ConfigVersion file
+include(CMakePackageConfigHelpers)
+set(DVSRGBFUSIONCAMERA_CONFIG_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/DvsRgbFusionCamera)
+configure_package_config_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/DvsRgbFusionCameraConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/DvsRgbFusionCameraConfig.cmake
+    INSTALL_DESTINATION ${DVSRGBFUSIONCAMERA_CONFIG_INSTALL_DIR}
+)
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/DvsRgbFusionCameraConfigVersion.cmake
+    VERSION 1.0.0
+    COMPATIBILITY SameMajorVersion
+)
+install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/DvsRgbFusionCameraConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/DvsRgbFusionCameraConfigVersion.cmake
+    DESTINATION ${DVSRGBFUSIONCAMERA_CONFIG_INSTALL_DIR}
+)
+
+# --------------------
+# Uninstall target
+# --------------------
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake
+    @ONLY
+)
+
+add_custom_target(uninstall
+    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake
+    COMMENT "Uninstalling files from install_manifest.txt"
+)
