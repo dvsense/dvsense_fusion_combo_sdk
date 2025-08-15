@@ -134,16 +134,19 @@ void HikCamera::bufferToMat(
             frame_out_.stFrameInfo.nHeight * frame_out_.stFrameInfo.nWidth * 3 + 2048;
         unsigned char* pDstData = (unsigned char*)malloc(dstBufSize);
 
-        MV_CC_PIXEL_CONVERT_PARAM_EX stConvertParam = { 0 };
-        stConvertParam.nWidth = frame_out_.stFrameInfo.nWidth;
-        stConvertParam.nHeight = frame_out_.stFrameInfo.nHeight;
-        stConvertParam.pSrcData = const_cast<unsigned char*>(frame_out_.pBufAddr);
-        stConvertParam.nSrcDataLen = frame_out_.stFrameInfo.nFrameLen;
-        stConvertParam.enSrcPixelType = frame_out_.stFrameInfo.enPixelType;
-        stConvertParam.enDstPixelType = PixelType_Gvsp_BGR8_Packed;
-        stConvertParam.pDstBuffer = pDstData;
-        stConvertParam.nDstBufferSize = dstBufSize;
-        MV_CC_ConvertPixelTypeEx(aps_camera_handle_, &stConvertParam);;
+        MV_CC_PIXEL_CONVERT_PARAM_EX stConvertParam = {
+            frame_out_.stFrameInfo.nWidth,                      // nWidth
+            frame_out_.stFrameInfo.nHeight,                     // nHeight
+            frame_out_.stFrameInfo.enPixelType,                 // enPixelType
+            const_cast<unsigned char*>(frame_out_.pBufAddr),    // pSrcData
+            frame_out_.stFrameInfo.nFrameLen,                   // nSrcDataLen
+            PixelType_Gvsp_BGR8_Packed,                         // enDstPixelType
+            pDstData,                                           // pDstBuffer
+            0,                                                  // nDstLen
+            dstBufSize,                                         // nDstBufferSize
+            0
+        };
+        MV_CC_ConvertPixelTypeEx(aps_camera_handle_, &stConvertParam);
         //frame = cv::Mat(frame_out_.stFrameInfo.nHeight, frame_out_.stFrameInfo.nWidth, 16,
         //    pDstData).clone();
         cv::Mat(frame_out_.stFrameInfo.nHeight, frame_out_.stFrameInfo.nWidth, 16, pDstData).copyTo(frame);
@@ -192,9 +195,7 @@ int HikCamera::startCamera() {
     is_grab_image_thread_running_ = true;
 
     grab_frame_thread_ = std::thread(
-        [this]() {
-            static int frame_num = 0;
-            
+        [this]() {            
             while (is_grab_image_thread_running_) {
                 FrameAndDrop new_frame_drop;
                 int ret = getNextFrame(new_frame_drop);
@@ -216,14 +217,14 @@ int HikCamera::startCamera() {
 
 int HikCamera::getWidth()
 {
-    MVCC_INTVALUE_EX stIntValue = { 0 };
+    MVCC_INTVALUE_EX stIntValue {0, 0, 0, 0, 0};
     MV_CC_GetIntValueEx(aps_camera_handle_, "Width", &stIntValue);
     return stIntValue.nCurValue;
 }
 
 int HikCamera::getHeight()
 {
-    MVCC_INTVALUE_EX stIntValue = { 0 };
+    MVCC_INTVALUE_EX stIntValue = {0, 0, 0, 0, 0};
     MV_CC_GetIntValueEx(aps_camera_handle_, "Height", &stIntValue);
     return stIntValue.nCurValue;
 }
