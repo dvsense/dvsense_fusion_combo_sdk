@@ -1,67 +1,31 @@
 #include "DvsRgbFusionCamera/camera_manager/DvsRgbFusionCamera.hpp"
 #include "DvsRgbCalib/CalibrateThroughFile.hpp"
 
+// purple - magenta
 cv::Vec3b color_bg = cv::Vec3b(0x00, 0x00, 0x00);
 cv::Vec3b color_on = cv::Vec3b(0xff, 0x00, 0xff);
 cv::Vec3b color_off = cv::Vec3b(0x00, 0xff, 0x00);
 
+// Gray
 //cv::Vec3b color_bg = cv::Vec3b(0x70, 0x70, 0x70);
 //cv::Vec3b color_on = cv::Vec3b(0xbf, 0xbc, 0xb4);
 //cv::Vec3b color_off = cv::Vec3b(0x40, 0x3d, 0x33);
 
-class EventAnalyzer {
-public:
-	cv::Mat img, img_swap;
-	uint64_t total_events = 0;
-	std::mutex m;
 
-	// Gray
-	//cv::Vec3b color_bg = cv::Vec3b(0x70, 0x70, 0x70);
-	//cv::Vec3b color_on = cv::Vec3b(0xbf, 0xbc, 0xb4);
-	//cv::Vec3b color_off = cv::Vec3b(0x40, 0x3d, 0x33);
-
-	cv::Vec3b color_bg = cv::Vec3b(0x00, 0x00, 0x00);
-	cv::Vec3b color_on = cv::Vec3b(0xff, 0x00, 0xff);
-	cv::Vec3b color_off = cv::Vec3b(0x00, 0xff, 0x00);
-
-	void setup_display(const int width, const int height) {
-		img = cv::Mat(height, width, CV_8UC3);
-		img_swap = cv::Mat(height, width, CV_8UC3);
-		img.setTo(color_bg);
-	}
-
-	// Called from main Thread
-	void get_display_frame(cv::Mat& display) {
-		// Swap images
-		{
-			std::unique_lock<std::mutex> lock(m);
-			std::swap(img, img_swap);
-			img.setTo(color_bg);
-		}
-		img_swap.copyTo(display);
-	}
-
-	// Called from decoding Thread
-	void process_events(const dvsense::Event2D* begin, const dvsense::Event2D* end) {
-		std::unique_lock<std::mutex> lock(m);
-		uint32_t event_count = 0;
-		for (auto it = begin; it != end; ++it) {
-			img.at<cv::Vec3b>(it->y, it->x) = (it->polarity) ? color_on : color_off;
-			event_count++;
-		}
-	}
-};
-
-int main()
+int main(int argc, char* argv[])
 {
-	std::string data_save_path = "D:/FusionCamera/test_datas";
+	if (argc < 2) {
+		std::cout << "Usage: " << argv[0] << " <data_save_path>" << std::endl;
+		return 1;
+	}
+	std::string data_save_path = argv[1];
 
-	bool is_calibrator = true;
+	bool is_calibration_active = true;
 
 	std::unique_ptr<CalibrateThroughFile> calibrator = std::make_unique<CalibrateThroughFile>("D:/FusionCamera/dvsense_fusion_combo_sdk/calibration_result.json");
 	cv::Mat H = calibrator->getApsToDvsHomographyMatrix(600);
 
-	std::queue<cv::Mat> buffer_show;
+	std::queue<cv::Mat> image_display_queue;
 	std::mutex display_image_mutex;
 
 	std::unique_ptr<DvsRgbFusionCamera> fusionCamera = std::make_unique<DvsRgbFusionCamera>(60);
@@ -89,33 +53,27 @@ int main()
 	);
 
 	fusionCamera->addApsFrameCallback(
-		[&is_calibrator, &calibrator, &H, &buffer_show, &new_dvs_frame, &dvs_width, &dvs_height, &dvs_frame_mutex, &display_image_mutex](const dvsense::ApsFrame& rgbframe)
+		[&is_calibration_active, &calibrator, &H, &image_display_queue, &new_dvs_frame, &dvs_width, &dvs_height, &dvs_frame_mutex, &display_image_mutex](const dvsense::ApsFrame& rgbframe)
 		{
-			if (rgbframe.getDataSize() != 0 && buffer_show.empty())
+			if (rgbframe.getDataSize() != 0 && image_display_queue.empty())
 			{
 				const uint8_t* external_data = rgbframe.data();
-				size_t data_size = rgbframe.getDataSize();
 				int aps_width = rgbframe.width();
 				int aps_height = rgbframe.height();
-
-				static int new_dvs_width = dvs_width * 1.215;
-				static int new_dvs_height = dvs_height * 1.215;
-
-				int start_timestamp = rgbframe.exposure_start_timestamp;
-				int end_timestamp = rgbframe.exposure_end_timestamp;
-
-				/*static cv::Mat reconstructed_image(aps_height, aps_width, CV_8UC3);
-				memcpy(reconstructed_image.data, external_data, data_size);*/
 
 				cv::Mat reconstructed_image(aps_height, aps_width, CV_8UC3, const_cast<void*>(static_cast<const void*>(external_data)));
 
 				static cv::Mat aps_resize;
 
-				if (!is_calibrator)
+				if (!is_calibration_active)
 				{
+
+					static int new_dvs_width = dvs_width * 1.215;
+					static int new_dvs_height = dvs_height * 1.215;
+
 					int y_start = (aps_height - new_dvs_height) / 2;
 					int x_start = (aps_width - new_dvs_width) / 2;
-					reconstructed_image(cv::Rect(x_start, y_start, new_dvs_width, new_dvs_height)).copyTo(aps_resize);
+					aps_resize = reconstructed_image(cv::Rect(x_start, y_start, new_dvs_width, new_dvs_height));
 					cv::resize(aps_resize, aps_resize, cv::Size(dvs_width, dvs_height), cv::INTER_AREA);
 					{
 						std::unique_lock<std::mutex> lock(dvs_frame_mutex);
@@ -124,12 +82,11 @@ int main()
 						new_dvs_frame.setTo(cv::Scalar(0, 0, 0));
 					}
 					std::unique_lock<std::mutex> lock(display_image_mutex);
-					buffer_show.emplace(aps_resize);
+					image_display_queue.emplace(aps_resize);
 				}
 				else
 				{
-					reconstructed_image.copyTo(aps_resize);
-					cv::Mat img_warped = calibrator->warpImage(aps_resize, H, cv::Size(dvs_width, dvs_height));
+					cv::Mat img_warped = calibrator->warpImage(reconstructed_image, H, cv::Size(dvs_width, dvs_height));
 					{
 						std::unique_lock<std::mutex> lock(dvs_frame_mutex);
 						img_warped.setTo(cv::Scalar(0, 0, 0), new_dvs_frame);
@@ -137,7 +94,7 @@ int main()
 						new_dvs_frame.setTo(cv::Scalar(0, 0, 0));
 					}
 					std::unique_lock<std::mutex> lock(display_image_mutex);
-					buffer_show.emplace(img_warped);
+					image_display_queue.emplace(img_warped);
 				}
 			}
 			else
@@ -161,11 +118,11 @@ int main()
 	bool is_recording = false;
 	bool stop_application = false;
 	while (!stop_application) {
-		if (!buffer_show.empty()) {
+		if (!image_display_queue.empty()) {
 			std::unique_lock<std::mutex> lock(display_image_mutex);
-			cv::Mat new_frame = buffer_show.front();
+			cv::Mat new_frame = image_display_queue.front();
 			cv::imshow(window_name, new_frame);
-			buffer_show.pop();
+			image_display_queue.pop();
 		}
 		int key = cv::waitKey(wait_time);
 
