@@ -11,21 +11,6 @@ DvsRgbFusionCamera::~DvsRgbFusionCamera()
 {
 }
 
-const bool DvsRgbFusionCamera::isConnected()
-{
-    bool ret = findCamera();
-    if (!ret)
-    {
-        return false;
-    }
-    ret = openCamera();
-    if (!ret)
-    {
-        return false;
-    }
-    return true;
-}
-
 bool DvsRgbFusionCamera::findCamera()
 {
 	bool ret = dvs_camera_->findCamera(dvs_camera_descs_);
@@ -43,7 +28,12 @@ bool DvsRgbFusionCamera::findCamera()
 
 bool DvsRgbFusionCamera::openCamera()
 {
-	bool ret = dvs_camera_->openCamera(dvs_camera_descs_[0]);
+    bool ret = findCamera();
+    if (!ret)
+    {
+        return false;
+    }
+	ret = dvs_camera_->openCamera(dvs_camera_descs_[0]);
     if (!ret)
     {
         return false;
@@ -51,37 +41,72 @@ bool DvsRgbFusionCamera::openCamera()
 	return true;
 }
 
-int DvsRgbFusionCamera::start()
+const bool DvsRgbFusionCamera::isConnected()
 {
-    extTriggerSyncCallback();
-    dvs_camera_->startCamera();
-    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-    rgb_camera_->startCamera();
-
-
-    int aps_width = rgb_camera_->getWidth();
-    int aps_height = rgb_camera_->getHeight();
-    aps_to_mp4_ = std::make_shared<DataToVideo>();
-    aps_to_mp4_->setConverterFmt(AV_PIX_FMT_BGR24, AV_PIX_FMT_YUV420P);
-    aps_to_mp4_->setConverterFrameSize(aps_height, aps_width, aps_height, aps_width);
-    if (aps_to_mp4_->initVideoConverter() < 0)
+    bool ret;
+    ret = dvs_camera_->isConnect();
+    if (!ret) 
     {
-        aps_to_mp4_.reset();
-        aps_is_recording_ = false;
+        std::cout << "DVS camera is not connected" << std::endl;
+        return false;
     }
-    addApsFrameCallback(
-        [this](const dvsense::ApsFrame& rgb_frame) {
-            if (aps_is_recording_) {
-                if (rgb_frame.getDataSize() != 0)
-                {
-                    aps_to_mp4_->rgbToVideo(rgb_frame.data(), rgb_frame.exposure_end_timestamp - aps_save_ts_offset_);
+    ret = rgb_camera_->isConnect();
+    if (!ret)
+    {
+        std::cout << "APS camera is not connected" << std::endl;
+        return false;
+    }
+    return true;
+}
+
+int DvsRgbFusionCamera::start(dvsense::STREAM_TYPE type)
+{
+    switch (type) {
+    case dvsense::DVS_STREAM: 
+    {
+        dvs_camera_->startCamera();
+        return 0;
+    }
+    case dvsense::APS_STREAM:
+    {
+    std::cout << "Error: Standalone RGB camera operation is not supported." << std::endl;
+    return -1;
+    }
+    case dvsense::FUSION_STREAM:
+    {
+        extTriggerSyncCallback();
+        dvs_camera_->startCamera();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+        rgb_camera_->startCamera();
+
+        int aps_width = rgb_camera_->getWidth();
+        int aps_height = rgb_camera_->getHeight();
+        aps_to_mp4_ = std::make_shared<DataToVideo>();
+        aps_to_mp4_->setConverterFmt(AV_PIX_FMT_BGR24, AV_PIX_FMT_YUV420P);
+        aps_to_mp4_->setConverterFrameSize(aps_height, aps_width, aps_height, aps_width);
+        if (aps_to_mp4_->initVideoConverter() < 0)
+        {
+            aps_to_mp4_.reset();
+            aps_is_recording_ = false;
+        }
+        addApsFrameCallback(
+            [this](const dvsense::ApsFrame& rgb_frame) {
+                if (aps_is_recording_) {
+                    if (rgb_frame.getDataSize() != 0)
+                    {
+                        aps_to_mp4_->rgbToVideo(rgb_frame.data(), rgb_frame.exposure_end_timestamp - aps_save_ts_offset_);
+                    }
                 }
-            }
-            else
-            {
-                aps_save_ts_offset_ = rgb_frame.exposure_end_timestamp;
-            }
-        });
+                else
+                {
+                    aps_save_ts_offset_ = rgb_frame.exposure_end_timestamp;
+                }
+            });
+        return 0;
+    }
+    default:
+        throw std::invalid_argument("Unknown STREAM_TYPE");
+    }
 
     return 0;
 }

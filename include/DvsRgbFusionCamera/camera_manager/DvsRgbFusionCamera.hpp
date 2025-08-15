@@ -31,6 +31,14 @@ public:
 	~DvsRgbFusionCamera();
 
 	/**
+	 * \~english @brief Opens the camera
+	 * \~english @return Returns true if successfully opened, false otherwise
+	 * \~chinese @brief 打开相机
+	 * \~chinese @return 如果成功打开则返回true，否则返回false
+	 */
+	bool openCamera();
+
+	/**
 	 * \~english @brief Check if the camera is connected
 	 * \~english @return true if connected, otherwise false
 	 * \~chinese @brief 检查相机是否连接
@@ -117,11 +125,13 @@ public:
 
 	/**
 	 * \~english @brief Start the camera
+	 * \~english @param type Camera type to open
 	 * \~english @return int 0 if success, otherwise return error code
 	 * \~chinese @brief 开启相机
+	 * \~chinese @param type 打开相机类型
 	 * \~chinese @return int 如果成功开启则返回0，否则返回错误代码
 	 */
-	int start();
+	int start(dvsense::STREAM_TYPE type = dvsense::FUSION_STREAM);
 
 	/**
 	 * \~english @brief Start recording events
@@ -198,7 +208,6 @@ private:
 	void extTriggerSyncCallback();
 
 	bool findCamera();
-	bool openCamera();
 
 	dvsense::CameraDescription camera_desc_;
 

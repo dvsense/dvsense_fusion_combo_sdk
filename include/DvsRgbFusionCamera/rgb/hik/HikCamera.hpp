@@ -31,6 +31,8 @@ public:
 
     int startCamera() override;
 
+    bool isConnect() override;
+
     void stopCamera() override;
 
     bool getNewRgbFrame(cv::Mat& output_frame) override;

@@ -4,6 +4,12 @@ HikCamera::~HikCamera()
 {
 }
 
+
+bool HikCamera::isConnect()
+{
+    return MV_CC_IsDeviceConnected(aps_camera_handle_);
+}
+
 bool HikCamera::findCamera() {
     MV_CC_DEVICE_INFO_LIST mvs_device_info_list;
     memset(&mvs_device_info_list, 0, sizeof(MV_CC_DEVICE_INFO_LIST));

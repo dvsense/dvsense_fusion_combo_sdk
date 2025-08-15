@@ -14,11 +14,13 @@ cv::Vec3b color_off = cv::Vec3b(0x00, 0xff, 0x00);
 
 int main(int argc, char* argv[])
 {
+	std::string data_save_path = "./data";
 	if (argc < 2) {
 		std::cout << "Usage: " << argv[0] << " <data_save_path>" << std::endl;
-		return 1;
 	}
-	std::string data_save_path = argv[1];
+	else {
+	    data_save_path = argv[1];	
+	}
 
 	bool is_calibration_active = true;
 
@@ -29,6 +31,11 @@ int main(int argc, char* argv[])
 	std::mutex display_image_mutex;
 
 	std::unique_ptr<DvsRgbFusionCamera> fusionCamera = std::make_unique<DvsRgbFusionCamera>(60);
+	if (!fusionCamera->openCamera()) 
+	{
+		std::cout << "fusionCamera open failed!" << std::endl;
+		return 0;
+	}
 	if (!fusionCamera->isConnected()) 
 	{
 		std::cout << "fusionCamera is not connected" << std::endl;
@@ -106,7 +113,7 @@ int main(int argc, char* argv[])
 		}
 	);
 
-	fusionCamera->start();
+	fusionCamera->start(dvsense::FUSION_STREAM);
 
 	const int fps = 30; // event-based cameras do not have a frame rate, but we need one for visualization
 	const int wait_time = static_cast<int>(std::round(1.f / fps * 1000)); // how long we should wait between two frames 

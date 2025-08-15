@@ -18,6 +18,8 @@ public:
 
 	virtual int startCamera() = 0;
 
+	virtual bool isConnect() = 0;
+
 	virtual int getWidth() = 0;
 
 	virtual int getHeight() = 0;
