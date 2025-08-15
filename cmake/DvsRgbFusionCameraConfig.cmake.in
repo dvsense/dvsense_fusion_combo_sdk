@@ -1,0 +1,16 @@
+# Config file for DvsRgbFusionCamera
+# Provides the imported targets and any required variables
+
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+# Re-find dependencies needed by the imported target
+find_dependency(OpenCV REQUIRED)
+find_dependency(Boost REQUIRED COMPONENTS filesystem)
+find_dependency(DvsenseDriver REQUIRED COMPONENTS Driver)
+
+include("${CMAKE_CURRENT_LIST_DIR}/DvsRgbFusionCameraTargets.cmake")
+
+# Optional: set variable for include dir
+set(DvsRgbFusionCamera_INCLUDE_DIRS "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_INCLUDEDIR@")

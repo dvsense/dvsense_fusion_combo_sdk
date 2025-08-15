@@ -1,4 +1,4 @@
-#include "DataToVideo.hpp"
+#include "DvsRgbFusionCamera/camera_manager/DataToVideo.hpp"
 #include "DvsenseBase/logging/logger.hh"
 #include <string>
 #include <chrono>

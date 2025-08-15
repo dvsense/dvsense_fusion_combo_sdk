@@ -1,0 +1,9 @@
+# Config file for DvsRgbCalib
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+find_dependency(OpenCV REQUIRED)
+
+include("${CMAKE_CURRENT_LIST_DIR}/DvsRgbCalibTargets.cmake")
+
+set(DvsRgbCalib_INCLUDE_DIRS "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_INCLUDEDIR@")

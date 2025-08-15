@@ -1,4 +1,4 @@
-#include "hik/HikCamera.hpp"
+#include "DvsRgbFusionCamera/rgb/hik/HikCamera.hpp"
 
 HikCamera::~HikCamera()
 {
