@@ -31,6 +31,11 @@ int main(int argc, char* argv[])
 	std::mutex display_image_mutex;
 
 	std::unique_ptr<DvsRgbFusionCamera> fusionCamera = std::make_unique<DvsRgbFusionCamera>(60);
+	if (!fusionCamera->findCamera())
+	{
+		std::cout << "fusionCamera find failed!" << std::endl;
+		return 0;
+	}
 	if (!fusionCamera->openCamera()) 
 	{
 		std::cout << "fusionCamera open failed!" << std::endl;

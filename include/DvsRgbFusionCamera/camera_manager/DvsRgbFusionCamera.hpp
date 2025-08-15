@@ -31,6 +31,14 @@ public:
 	~DvsRgbFusionCamera();
 
 	/**
+	 * \~english @brief Find the camera
+	 * \~english @return Return true if successfully find, false otherwise
+	 * \~chinese @brief 查找相机
+	 * \~chinese @return 如果成功找到则返回true，否则返回false
+	 */
+	bool findCamera();
+
+	/**
 	 * \~english @brief Opens the camera
 	 * \~english @return Returns true if successfully opened, false otherwise
 	 * \~chinese @brief 打开相机
@@ -206,8 +214,6 @@ private:
 
 	// ----- sync -----
 	void extTriggerSyncCallback();
-
-	bool findCamera();
 
 	dvsense::CameraDescription camera_desc_;
 

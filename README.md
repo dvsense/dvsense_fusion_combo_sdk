@@ -97,10 +97,10 @@ DVS事件相机[DVSLume](https://dvsense.com/dvslume)，RGB相机（目前支持
 3. 创建相机实例（设置帧率为60FPS，默认为30FPS）  
 
         std::unique_ptr<DvsRgbFusionCamera> fusionCamera = std::make_unique<DvsRgbFusionCamera>(60);
-4. 打开相机并检查相机连接状态，如果返回为true，表示两台相机连接成功   
+4. 查找并打开相机，如果返回为true，表示两台相机连接成功   
 
-        fusionCamera->openCamera()
-        fusionCamera->isConnected()
+        fusionCamera->findCamera();
+        fusionCamera->openCamera();
 5. 获取DVS相机的宽度和高度  
 
         uint16_t dvs_width = fusionCamera->getWidth();

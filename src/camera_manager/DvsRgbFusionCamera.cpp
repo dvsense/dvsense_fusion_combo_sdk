@@ -28,12 +28,7 @@ bool DvsRgbFusionCamera::findCamera()
 
 bool DvsRgbFusionCamera::openCamera()
 {
-    bool ret = findCamera();
-    if (!ret)
-    {
-        return false;
-    }
-	ret = dvs_camera_->openCamera(dvs_camera_descs_[0]);
+	bool ret = dvs_camera_->openCamera(dvs_camera_descs_[0]);
     if (!ret)
     {
         return false;

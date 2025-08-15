@@ -25,10 +25,8 @@ bool HikCamera::findCamera() {
             if (p_device_info == nullptr) {
                 break;
             }
-            std::cout << "[device " << i << "]:" << std::endl;
-            std::cout << "UserDefinedName: " << p_device_info->SpecialInfo.stUsb3VInfo.chUserDefinedName << std::endl;
+            std::cout << i+1 << " aps camera(s) found" << std::endl;
             std::cout << "Serial Number: " << p_device_info->SpecialInfo.stUsb3VInfo.chSerialNumber << std::endl;
-            std::cout << "Device Number: " << p_device_info->SpecialInfo.stUsb3VInfo.nDeviceNumber << std::endl << std::endl;
         }
     }
     else {
@@ -36,7 +34,6 @@ bool HikCamera::findCamera() {
         return false;
     }
 
-    std::cout << "Use the first device to create handle" << std::endl;
     ret = MV_CC_CreateHandle(&aps_camera_handle_, mvs_device_info_list.pDeviceInfo[0]);
     if (ret != MV_OK) {
         std::cout << "MV_CC_CreateHandle fail! ret = " << ret << std::endl;
