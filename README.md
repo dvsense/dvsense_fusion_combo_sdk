@@ -97,13 +97,43 @@ DVS事件相机[DVSLume](https://dvsense.com/dvslume)，RGB相机（目前支持
 3. 创建相机实例（设置帧率为60FPS，默认为30FPS）  
 
         std::unique_ptr<DvsRgbFusionCamera> fusionCamera = std::make_unique<DvsRgbFusionCamera>(60);
-4. 检查相机连接状态，如果返回为true，表示两台相机连接成功   
+4. 打开相机并检查相机连接状态，如果返回为true，表示两台相机连接成功   
 
+        fusionCamera->openCamera()
         fusionCamera->isConnected()
 5. 获取DVS相机的宽度和高度  
 
         uint16_t dvs_width = fusionCamera->getWidth();
         uint16_t dvs_height = fusionCamera->getHeight();
+6. 添加DVS相机数据流回调并累帧
+
+        cv::Mat dvs_frame(dvs_height, dvs_width, CV_8UC3, cv::Scalar(0, 0, 0))；
+        fusionCamera->addEventsStreamHandleCallback([&dvs_frame](const dvsense::EventIterator_t begin, const dvsense::EventIterator_t end) 
+        {
+		    for (auto it = begin; it != end; ++it) 
+            {
+				dvs_frame.at<cv::Vec3b>(it->y, it->x) = (it->polarity) ? color_on : color_off;			
+            }
+		});
+
+7. 添加APS相机图像帧回调
+
+        cv::Mat aps_frame;
+        fusionCamera->addApsFrameCallback([&aps_frame](const dvsense::ApsFrame& rgbframe)
+        {
+	        if (rgbframe.getDataSize() != 0)
+            {
+	            const uint8_t* external_data = rgbframe.data();
+                int aps_width = rgbframe.width();
+                int aps_height = rgbframe.height();
+                cv::Mat reconstructed_image(aps_height, aps_width, CV_8UC3, const_cast<void*>(static_cast<const void*>(external_data)));
+                aps_frame = reconstructed_image;
+            }
+        });
+
+8. 开始取流，默认为双相机同时取流
+
+        fusionCamera->start(dvsense::FUSION_STREAM);
 
 # API文档
 [DVS-RGB相机套装API](docs/html/index.html)
