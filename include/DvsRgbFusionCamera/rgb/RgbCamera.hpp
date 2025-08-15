@@ -1,7 +1,14 @@
 #pragma once
+
+#ifdef _WIN32
 #include "opencv2/opencv.hpp"
 #include "opencv2/core.hpp"
 #include "opencv2/imgproc.hpp"
+#else 
+#include "opencv4/opencv2/opencv.hpp"
+#include "opencv4/opencv2/core.hpp"
+#include "opencv4/opencv2/imgproc.hpp"
+#endif
 
 class RgbCamera {
 public:

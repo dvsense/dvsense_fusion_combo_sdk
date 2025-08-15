@@ -43,7 +43,7 @@ public:
 
 private:
     void* aps_camera_handle_ = nullptr;
-    MV_FRAME_OUT frame_out_ = { 0 };
+    MV_FRAME_OUT frame_out_ = {};
     std::atomic<bool> is_grab_image_thread_running_ = false;
     std::thread grab_frame_thread_;
     std::queue<cv::Mat> private_buffer_frames_;

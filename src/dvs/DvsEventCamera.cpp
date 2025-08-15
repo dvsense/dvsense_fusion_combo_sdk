@@ -117,7 +117,6 @@ namespace dvsense
     {
         dvs_camera_->addTriggerInCallback(
             [this](const dvsense::EventTriggerIn begin) {
-                static int  trigger_num = 0;
                 for (auto trigger : new_trigger_in_callbacks_)
                 {
                     trigger.second(begin);

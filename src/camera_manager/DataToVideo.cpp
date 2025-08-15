@@ -82,7 +82,7 @@
 		int dstStride[1] = {dst_width_ * 3}; 
 		int res = sws_scale(sws_ctx_, srcSlice, srcStride, 0, src_height_, dstSlice, dstStride);
 #endif
-		return 0;
+		return res;
 	}
 
 	int DataToVideo::initVideoConverter()
@@ -156,7 +156,8 @@
 			return -1;
 		}
 
-		av_init_packet(&packet_);
+		// av_init_packet(&packet_);
+		packet_ = *av_packet_alloc();
 		packet_.data = nullptr;
 		packet_.size = 0;
 
@@ -233,6 +234,7 @@
 			av_interleaved_write_frame(fmt_ctx_, &packet_);
 			av_packet_unref(&packet_);
 		}
+		return 0;
 	}
 
 	int DataToVideo::rgbToVideo(const unsigned char *rgb_data, int64_t ts)
