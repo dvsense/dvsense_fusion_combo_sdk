@@ -27,7 +27,9 @@ public:
     }
 	~HikCamera();
 
-    bool findCamera() override;
+    bool findCamera(std::vector<std::string>& serial_numbers) override;
+
+    bool openCamera(std::string serial_number) override;
 
     int startCamera() override;
 

@@ -15,6 +15,12 @@
 #define DVSENSE_API
 #endif // _WIN32
 
+struct DvsRgbCameraSerial
+{
+	dvsense::CameraDescription dvs_serial_number;
+	std::string rgb_serial_number;
+};
+
 using FrameCallback = std::function<void(dvsense::ApsFrame&)>;
 
 class DVSENSE_API DvsRgbFusionCamera
@@ -36,7 +42,7 @@ public:
 	 * \~chinese @brief 查找相机
 	 * \~chinese @return 如果成功找到则返回true，否则返回false
 	 */
-	bool findCamera();
+	bool findCamera(std::vector<dvsense::CameraDescription>&, std::vector<std::string>&);
 
 	/**
 	 * \~english @brief Opens the camera
@@ -44,7 +50,7 @@ public:
 	 * \~chinese @brief 打开相机
 	 * \~chinese @return 如果成功打开则返回true，否则返回false
 	 */
-	bool openCamera();
+	bool openCamera(DvsRgbCameraSerial);
 
 	/**
 	 * \~english @brief Check if the camera is connected
@@ -198,7 +204,6 @@ public:
 private:
 	std::shared_ptr<dvsense::DvsEventCamera> dvs_camera_;
 	std::unique_ptr<RgbCamera> rgb_camera_;
-	std::vector<dvsense::CameraDescription> dvs_camera_descs_;
 
 	float aps_fps_;
 	std::mutex event_buffer_mutex_;

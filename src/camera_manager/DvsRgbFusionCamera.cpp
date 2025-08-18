@@ -11,14 +11,14 @@ DvsRgbFusionCamera::~DvsRgbFusionCamera()
 {
 }
 
-bool DvsRgbFusionCamera::findCamera()
+bool DvsRgbFusionCamera::findCamera(std::vector<dvsense::CameraDescription>& dvs_camera_descs, std::vector<std::string>& aps_serial_numbers)
 {
-	bool ret = dvs_camera_->findCamera(dvs_camera_descs_);
+	bool ret = dvs_camera_->findCamera(dvs_camera_descs);
     if (!ret) 
     {
         return false;
     }
-    ret = rgb_camera_->findCamera();
+    ret = rgb_camera_->findCamera(aps_serial_numbers);
     if (!ret)
     {
         return false;
@@ -26,9 +26,14 @@ bool DvsRgbFusionCamera::findCamera()
 	return true;
 }
 
-bool DvsRgbFusionCamera::openCamera()
+bool DvsRgbFusionCamera::openCamera(DvsRgbCameraSerial dvs_rgb_serial_number)
 {
-	bool ret = dvs_camera_->openCamera(dvs_camera_descs_[0]);
+	bool ret = dvs_camera_->openCamera(dvs_rgb_serial_number.dvs_serial_number);
+    if (!ret)
+    {
+        return false;
+    }
+    ret = rgb_camera_->openCamera(dvs_rgb_serial_number.rgb_serial_number);
     if (!ret)
     {
         return false;

@@ -31,12 +31,18 @@ int main(int argc, char* argv[])
 	std::mutex display_image_mutex;
 
 	std::unique_ptr<DvsRgbFusionCamera> fusionCamera = std::make_unique<DvsRgbFusionCamera>(60);
-	if (!fusionCamera->findCamera())
+
+	std::vector<dvsense::CameraDescription> dvs_serials;
+	std::vector<std::string> rgb_serials;
+	if (!fusionCamera->findCamera(dvs_serials, rgb_serials))
 	{
 		std::cout << "fusionCamera find failed!" << std::endl;
 		return 0;
 	}
-	if (!fusionCamera->openCamera()) 
+	DvsRgbCameraSerial dvs_rgb_camera_serial;
+	dvs_rgb_camera_serial.dvs_serial_number = dvs_serials[0];
+	dvs_rgb_camera_serial.rgb_serial_number = rgb_serials[0];
+	if (!fusionCamera->openCamera(dvs_rgb_camera_serial))
 	{
 		std::cout << "fusionCamera open failed!" << std::endl;
 		return 0;
