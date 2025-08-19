@@ -11,77 +11,102 @@ DvsRgbFusionCamera::~DvsRgbFusionCamera()
 {
 }
 
-const bool DvsRgbFusionCamera::isConnected()
+bool DvsRgbFusionCamera::findCamera(std::vector<dvsense::CameraDescription>& dvs_camera_descs, std::vector<std::string>& aps_serial_numbers)
 {
-    bool ret = findCamera();
+	bool ret = dvs_camera_->findCamera(dvs_camera_descs);
+    if (!ret) 
+    {
+        return false;
+    }
+    ret = rgb_camera_->findCamera(aps_serial_numbers);
     if (!ret)
     {
         return false;
     }
-    ret = openCamera();
+	return true;
+}
+
+bool DvsRgbFusionCamera::openCamera(DvsRgbCameraSerial dvs_rgb_serial_number)
+{
+	bool ret = dvs_camera_->openCamera(dvs_rgb_serial_number.dvs_serial_number);
     if (!ret)
     {
+        return false;
+    }
+    ret = rgb_camera_->openCamera(dvs_rgb_serial_number.rgb_serial_number);
+    if (!ret)
+    {
+        return false;
+    }
+	return true;
+}
+
+const bool DvsRgbFusionCamera::isConnected()
+{
+    bool ret;
+    ret = dvs_camera_->isConnect();
+    if (!ret) 
+    {
+        std::cout << "DVS camera is not connected" << std::endl;
+        return false;
+    }
+    ret = rgb_camera_->isConnect();
+    if (!ret)
+    {
+        std::cout << "APS camera is not connected" << std::endl;
         return false;
     }
     return true;
 }
 
-bool DvsRgbFusionCamera::findCamera()
+int DvsRgbFusionCamera::start(dvsense::STREAM_TYPE type)
 {
-	bool ret = dvs_camera_->findCamera(dvs_camera_descs_);
-    if (!ret) 
+    switch (type) {
+    case dvsense::DVS_STREAM: 
     {
-        return false;
+        dvs_camera_->startCamera();
+        return 0;
     }
-    ret = rgb_camera_->findCamera();
-    if (!ret)
+    case dvsense::APS_STREAM:
     {
-        return false;
+    std::cout << "Error: Standalone RGB camera operation is not supported." << std::endl;
+    return -1;
     }
-	return true;
-}
-
-bool DvsRgbFusionCamera::openCamera()
-{
-	bool ret = dvs_camera_->openCamera(dvs_camera_descs_[0]);
-    if (!ret)
+    case dvsense::FUSION_STREAM:
     {
-        return false;
-    }
-	return true;
-}
+        extTriggerSyncCallback();
+        dvs_camera_->startCamera();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+        rgb_camera_->startCamera();
 
-int DvsRgbFusionCamera::start()
-{
-    extTriggerSyncCallback();
-    dvs_camera_->startCamera();
-    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-    rgb_camera_->startCamera();
-
-
-    int aps_width = rgb_camera_->getWidth();
-    int aps_height = rgb_camera_->getHeight();
-    aps_to_mp4_ = std::make_shared<DataToVideo>();
-    aps_to_mp4_->setConverterFmt(AV_PIX_FMT_BGR24, AV_PIX_FMT_YUV420P);
-    aps_to_mp4_->setConverterFrameSize(aps_height, aps_width, aps_height, aps_width);
-    if (aps_to_mp4_->initVideoConverter() < 0)
-    {
-        aps_to_mp4_.reset();
-        aps_is_recording_ = false;
-    }
-    addApsFrameCallback(
-        [this](const dvsense::ApsFrame& rgb_frame) {
-            if (aps_is_recording_) {
-                if (rgb_frame.getDataSize() != 0)
-                {
-                    aps_to_mp4_->rgbToVideo(rgb_frame.data(), rgb_frame.exposure_end_timestamp - aps_save_ts_offset_);
+        int aps_width = rgb_camera_->getWidth();
+        int aps_height = rgb_camera_->getHeight();
+        aps_to_mp4_ = std::make_shared<DataToVideo>();
+        aps_to_mp4_->setConverterFmt(AV_PIX_FMT_BGR24, AV_PIX_FMT_YUV420P);
+        aps_to_mp4_->setConverterFrameSize(aps_height, aps_width, aps_height, aps_width);
+        if (aps_to_mp4_->initVideoConverter() < 0)
+        {
+            aps_to_mp4_.reset();
+            aps_is_recording_ = false;
+        }
+        addApsFrameCallback(
+            [this](const dvsense::ApsFrame& rgb_frame) {
+                if (aps_is_recording_) {
+                    if (rgb_frame.getDataSize() != 0)
+                    {
+                        aps_to_mp4_->rgbToVideo(rgb_frame.data(), rgb_frame.exposure_end_timestamp - aps_save_ts_offset_);
+                    }
                 }
-            }
-            else
-            {
-                aps_save_ts_offset_ = rgb_frame.exposure_end_timestamp;
-            }
-        });
+                else
+                {
+                    aps_save_ts_offset_ = rgb_frame.exposure_end_timestamp;
+                }
+            });
+        return 0;
+    }
+    default:
+        throw std::invalid_argument("Unknown STREAM_TYPE");
+    }
 
     return 0;
 }

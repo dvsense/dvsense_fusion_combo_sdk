@@ -45,6 +45,8 @@ namespace dvsense
 
 		bool openCamera(dvsense::CameraDescription);
 
+		bool isConnect();
+
 		int startCamera();
 
 		void stopCamera();

@@ -27,6 +27,11 @@ namespace dvsense
         return true;
     }
 
+    bool DvsEventCamera::isConnect()
+    {
+        return dvs_camera_->isConnected();
+    }
+
     bool DvsEventCamera::openCamera(dvsense::CameraDescription cameraDesc)
     {
         camera_desc_ = cameraDesc;

@@ -4,7 +4,13 @@ HikCamera::~HikCamera()
 {
 }
 
-bool HikCamera::findCamera() {
+
+bool HikCamera::isConnect()
+{
+    return MV_CC_IsDeviceConnected(aps_camera_handle_);
+}
+
+bool HikCamera::findCamera(std::vector<std::string>& serial_numbers) {
     MV_CC_DEVICE_INFO_LIST mvs_device_info_list;
     memset(&mvs_device_info_list, 0, sizeof(MV_CC_DEVICE_INFO_LIST));
     int ret = MV_CC_EnumDevices(MV_USB_DEVICE, &mvs_device_info_list);
@@ -19,19 +25,53 @@ bool HikCamera::findCamera() {
             if (p_device_info == nullptr) {
                 break;
             }
-            std::cout << "[device " << i << "]:" << std::endl;
-            std::cout << "UserDefinedName: " << p_device_info->SpecialInfo.stUsb3VInfo.chUserDefinedName << std::endl;
+            std::cout << i + 1 << " aps camera(s) found" << std::endl;
             std::cout << "Serial Number: " << p_device_info->SpecialInfo.stUsb3VInfo.chSerialNumber << std::endl;
-            std::cout << "Device Number: " << p_device_info->SpecialInfo.stUsb3VInfo.nDeviceNumber << std::endl << std::endl;
+            serial_numbers.push_back(reinterpret_cast<const char*>(p_device_info->SpecialInfo.stUsb3VInfo.chSerialNumber));
         }
     }
     else {
         std::cout << "Find No Devices!" << std::endl;
         return false;
     }
+    return true;
+}
 
-    std::cout << "Use the first device to create handle" << std::endl;
-    ret = MV_CC_CreateHandle(&aps_camera_handle_, mvs_device_info_list.pDeviceInfo[0]);
+bool HikCamera::openCamera(std::string serial_number) {
+    MV_CC_DEVICE_INFO_LIST mvs_device_info_list;
+    memset(&mvs_device_info_list, 0, sizeof(MV_CC_DEVICE_INFO_LIST));
+    int ret = MV_CC_EnumDevices(MV_USB_DEVICE, &mvs_device_info_list);
+    if (ret != MV_OK) {
+        std::cout << "MV_CC_EnumDevices fail! ret = " << ret << std::endl;
+        return false;
+    }
+    // print out the device information
+    int input_serial_number = -1;
+    if (mvs_device_info_list.nDeviceNum > 0) {
+        for (unsigned int i = 0; i < mvs_device_info_list.nDeviceNum; i++) {
+            MV_CC_DEVICE_INFO* p_device_info = mvs_device_info_list.pDeviceInfo[i];
+            if (p_device_info == nullptr) {
+                break;
+            }
+            std::string hik_number = reinterpret_cast<const char*>(p_device_info->SpecialInfo.stUsb3VInfo.chSerialNumber);
+            if (hik_number == serial_number) 
+            {
+                input_serial_number = i;
+                break;
+            }
+        }
+        if (input_serial_number == -1)
+        {
+            std::cout << "Aps camera input serial number no find!" << std::endl;
+            return false;
+        } 
+    }
+    else {
+        std::cout << "Find No Devices!" << std::endl;
+        return false;
+    }
+
+    ret = MV_CC_CreateHandle(&aps_camera_handle_, mvs_device_info_list.pDeviceInfo[input_serial_number]);
     if (ret != MV_OK) {
         std::cout << "MV_CC_CreateHandle fail! ret = " << ret << std::endl;
         return false;

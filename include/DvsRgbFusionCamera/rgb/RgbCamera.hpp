@@ -14,9 +14,13 @@ class RgbCamera {
 public:
 	virtual ~RgbCamera() = default;
 
-	virtual bool findCamera() = 0;
+	virtual bool findCamera(std::vector<std::string>& serial_numbers) = 0;
+
+	virtual bool openCamera(std::string serial_number) = 0;
 
 	virtual int startCamera() = 0;
+
+	virtual bool isConnect() = 0;
 
 	virtual int getWidth() = 0;
 
