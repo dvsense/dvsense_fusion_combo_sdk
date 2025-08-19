@@ -38,19 +38,25 @@ public:
 
 	/**
 	 * \~english @brief Find the camera
+	 * \~english @param dvs_camera_descs DVS camera serial numbers
+	 * \~english @param aps_serial_numbers RGB camera serial numbers
 	 * \~english @return Return true if successfully find, false otherwise
 	 * \~chinese @brief 查找相机
+	 * \~chinese @param dvs_camera_descs DVS相机序列号列表
+	 * \~chinese @param aps_serial_numbers RGB相机序列号列表
 	 * \~chinese @return 如果成功找到则返回true，否则返回false
 	 */
-	bool findCamera(std::vector<dvsense::CameraDescription>&, std::vector<std::string>&);
+	bool findCamera(std::vector<dvsense::CameraDescription>& dvs_camera_descs, std::vector<std::string>& aps_serial_numbers);
 
 	/**
 	 * \~english @brief Opens the camera
+	 * \~english @param dvs_rgb_serial_number DVS camera and RGB camera serial number struct
 	 * \~english @return Returns true if successfully opened, false otherwise
 	 * \~chinese @brief 打开相机
+	 * \~chinese @param dvs_rgb_serial_number 包含DVS相机和RGB相机序列号的结构体
 	 * \~chinese @return 如果成功打开则返回true，否则返回false
 	 */
-	bool openCamera(DvsRgbCameraSerial);
+	bool openCamera(DvsRgbCameraSerial dvs_rgb_serial_number);
 
 	/**
 	 * \~english @brief Check if the camera is connected
