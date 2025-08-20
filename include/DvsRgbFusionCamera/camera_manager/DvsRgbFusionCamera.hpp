@@ -8,6 +8,9 @@
 #include "DvsRgbFusionCamera/dvs/DvsEventCamera.hpp"
 #include "DvsRgbFusionCamera/rgb/RgbCamera.hpp"
 #include "DvsRgbFusionCamera/camera_manager/DataToVideo.hpp"
+#include "DvsRgbCalib/json/json.hpp"
+
+using json = nlohmann::json;
 
 #ifdef _WIN32
 #define DVSENSE_API __declspec(dllexport)
@@ -232,6 +235,10 @@ private:
 	std::shared_ptr<DataToVideo> aps_decoder_;
 	bool aps_is_recording_ = false;
 	dvsense::TimeStamp aps_save_ts_offset_;
+	uint64_t save_frame_num_ = 0;
+
+	json sync_json_;
+	std::ofstream json_file_;
 
 };
 

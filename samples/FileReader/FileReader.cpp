@@ -8,6 +8,8 @@
 #include "DvsenseBase/logging/logger.hh"
 #include "DvsRgbCalib/CalibrateThroughFile.hpp"
 
+using json = nlohmann::json;
+
 class EventAnalyzer {
 public:
 	cv::Mat img, img_swap;
@@ -52,12 +54,20 @@ public:
 };
 
 int main() {
-	cv::VideoCapture cap("D:/FusionCamera/test_datas/fusion-2025-08-14_15_14_35.mp4", cv::CAP_FFMPEG);
-	std::string event_file_path = "D:/FusionCamera/test_datas/fusion-2025-08-14_15_14_35.raw";
+	std::ifstream file("D:/FusionCamera/dvsense_fusion_combo_sdk/out/build/x64-Release/bin/data/fusion-2025-08-19_18_00_46.json");
+	json data = json::parse(file);
+
+	std::string event_file_path = data["dvs_file_path"];
+	std::string aps_file_path = data["aps_file_path"];
+	dvsense::TimeStamp offset_timestamp = data["aps_offset_timestamp"];
+
+	cv::VideoCapture cap(aps_file_path, cv::CAP_FFMPEG);
 	if (!cap.isOpened()) {
 		std::cerr << "Error: Could not open video file." << std::endl;
 		return -1;
 	} 
+	double aps_fps = cap.get(cv::CAP_PROP_FPS);
+	const int event_analyzer_time = static_cast<int>(std::round(1.f / aps_fps * 1000));
 
 	dvsense::DvsFile reader = dvsense::DvsFileReader::createFileReader(event_file_path);
 	if (!reader->loadFile())
@@ -84,10 +94,6 @@ int main() {
 	cv::resizeWindow(window_name, reader->getWidth(), reader->getHeight());
 
 	// ----------------- Event processing and show -----------------
-
-	dvsense::TimeStamp offset_timestamp;
-	reader->getStartTimeStamp(offset_timestamp);
-
 	cv::Mat new_dvs_frame;
 	cv::Mat new_aps_frame;
 	cv::Mat frame;
@@ -95,7 +101,7 @@ int main() {
 		dvsense::TimeStamp pts = cap.get(cv::CAP_PROP_POS_MSEC) * 1000;
 		dvsense::TimeStamp current_ts = pts + offset_timestamp;
 
-		std::shared_ptr<dvsense::Event2DVector> events = reader->getNTimeEventsGivenStartTimeStamp(current_ts, wait_time * 1000);
+		std::shared_ptr<dvsense::Event2DVector> events = reader->getNTimeEventsGivenStartTimeStamp(current_ts - event_analyzer_time * 1000, event_analyzer_time * 1000);
 		event_analyzer.process_events(events->data(), events->data() + events->size());
 		if (reader->reachedEndOfEvents())
 		{
