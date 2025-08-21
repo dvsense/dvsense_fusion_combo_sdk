@@ -92,14 +92,24 @@ int DvsRgbFusionCamera::start(dvsense::STREAM_TYPE type)
         addApsFrameCallback(
             [this](const dvsense::ApsFrame& rgb_frame) {
                 if (aps_is_recording_) {
+                    if (save_frame_num_ == 0)
+                    {
+                        aps_save_ts_offset_ = rgb_frame.exposure_end_timestamp;
+                        sync_json_["aps_offset_timestamp"] = aps_save_ts_offset_;
+                        if (json_file_.is_open()) {
+                            json_file_ << sync_json_.dump(4);
+                        }
+                    
+                    }
                     if (rgb_frame.getDataSize() != 0)
                     {
                         aps_to_mp4_->rgbToVideo(rgb_frame.data(), rgb_frame.exposure_end_timestamp - aps_save_ts_offset_);
                     }
+                    save_frame_num_++;
                 }
                 else
                 {
-                    aps_save_ts_offset_ = rgb_frame.exposure_end_timestamp;
+                    save_frame_num_ = 0;
                 }
             });
         return 0;
@@ -136,39 +146,6 @@ bool DvsRgbFusionCamera::removeTriggerInCallback(uint32_t callback_id)
     return dvs_camera_->removeTriggerInCallback(callback_id);
 }
 
-//void DvsRgbFusionCamera::addEvents(dvsense::EventIterator_t begin, dvsense::EventIterator_t end)
-//{
-//    std::lock_guard<std::mutex> lock(event_buffer_mutex_);
-//    /*event_buffer_->insert(event_buffer_->end(), begin, end);*/
-//    event_buffer_->insert(event_buffer_->end(), begin, end);
-//}
-//
-//std::shared_ptr<dvsense::Event2DVector> DvsRgbFusionCamera::getEvents()
-//{
-//	//std::lock_guard<std::mutex> lock(event_buffer_mutex_);
-//	//return std::make_shared<dvsense::Event2DVector>(*event_buffer_); // ���
-//    return event_buffer_; 
-//}
-//
-//void DvsRgbFusionCamera::reset() {
-//	//std::lock_guard<std::mutex> lock(event_buffer_mutex_);
-//    event_buffer_->clear();
-//}
-
-
-// std::string DvsRgbFusionCamera::getCurrentTime() {
-//     auto now = std::chrono::system_clock::now();
-//     std::time_t now_time = std::chrono::system_clock::to_time_t(now);
-
-//     std::tm local_time;
-//     localtime_s(&local_time, &now_time);
-
-//     std::ostringstream oss;
-//     oss << std::put_time(&local_time, "%Y%m%d%H%M");
-
-//     return oss.str();
-// }
-
 std::string DvsRgbFusionCamera::getCurrentTime() {
     auto now = std::chrono::system_clock::now();
     auto time = std::chrono::system_clock::to_time_t(now);
@@ -186,11 +163,16 @@ int DvsRgbFusionCamera::startRecording(std::string output_dir) {
     }
     std::string current_time = getCurrentTime();
 
-    std::string dvs_file_path = (output_dir_path / ("fusion-" + current_time + ".raw")).string();
-    std::cout << dvs_file_path << std::endl;
-    dvs_camera_->startRecording(dvs_file_path);
+    std::string json_path = (output_dir_path / ("fusion-" + current_time + ".json")).string();
+    json_file_.open(json_path);
 
-    aps_to_mp4_->setOutputFile((output_dir_path / ("fusion-" + current_time + ".mp4")).string());
+    std::string dvs_file_path = (output_dir_path / ("fusion-" + current_time + ".raw")).string();
+    std::string aps_file_path = (output_dir_path / ("fusion-" + current_time + ".mp4")).string();
+    sync_json_["aps_file_path"] = aps_file_path;
+    sync_json_["dvs_file_path"] = dvs_file_path;
+
+    dvs_camera_->startRecording(dvs_file_path);
+    aps_to_mp4_->setOutputFile(aps_file_path);
     aps_is_recording_ = true;
     std::cout << "Start Recording, Saving to " << output_dir << std::endl;
     return 0;
@@ -202,6 +184,8 @@ int DvsRgbFusionCamera::stopRecording() {
     aps_is_recording_ = false;
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     aps_to_mp4_->flushAndCloseVideo();
+
+    json_file_.close();
 
     return 0;
 }
