@@ -168,11 +168,13 @@ public:
 
 	/**
 	 * \~english @brief Stop the camera
+	 * \~english @param type Camera type to close
 	 * \~english @return int 0 if success, otherwise return error code
 	 * \~chinese @brief ͣ停止相机
+	 * \~chinese @param type 停止相机类型
 	 * \~chinese @return int 如果成功停止则返回0，否则返回错误代码
 	 */
-	int stop();
+	int stop(dvsense::STREAM_TYPE type = dvsense::FUSION_STREAM);
 
 	/**
 	 * \~english @brief Stop recording events
@@ -228,6 +230,9 @@ private:
 
 	// ----- sync -----
 	void extTriggerSyncCallback();
+	uint32_t ext_trigger_sync_callback_id_ = 0;
+	uint32_t recording_frame_callback_id_ = 0;
+	bool open_ext_trigger_sync_ = false;
 
 	dvsense::CameraDescription camera_desc_;
 

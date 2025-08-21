@@ -36,6 +36,7 @@ namespace dvsense
     {
         camera_desc_ = cameraDesc;
         dvs_camera_ = camera_manager_.openCamera(cameraDesc.serial);
+        openDvsTriggerIn();
         std::shared_ptr<dvsense::CameraTool> trigger_in = dvs_camera_->getTool(dvsense::ToolType::TOOL_TRIGGER_IN);
         bool ret = trigger_in->setParam("enable", true);
         if (!ret) {
@@ -54,20 +55,23 @@ namespace dvsense
         if (!ret) {
             return false;
         }
-
         return true;
     }
 
     int DvsEventCamera::startCamera()
     {
-        openDvsTriggerIn();
-        dvs_camera_->start();
+        if (!dvs_camera_running_)
+        {
+            dvs_camera_->start();
+            dvs_camera_running_ = true;
+        }
         return 0;
     }
 
     void DvsEventCamera::stopCamera()
     {
         dvs_camera_->stop();
+        dvs_camera_running_ = false;
     }
 
     uint32_t DvsEventCamera::registerEventCallback(const dvsense::EventsStreamHandleCallback& callback) {

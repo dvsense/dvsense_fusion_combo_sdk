@@ -38,6 +38,43 @@ bool DvsRgbFusionCamera::openCamera(DvsRgbCameraSerial dvs_rgb_serial_number)
     {
         return false;
     }
+
+    extTriggerSyncCallback();
+    open_ext_trigger_sync_ = true;
+
+    int aps_width = rgb_camera_->getWidth();
+    int aps_height = rgb_camera_->getHeight();
+    aps_to_mp4_ = std::make_shared<DataToVideo>();
+    aps_to_mp4_->setConverterFmt(AV_PIX_FMT_BGR24, AV_PIX_FMT_YUV420P);
+    aps_to_mp4_->setConverterFrameSize(aps_height, aps_width, aps_height, aps_width);
+    if (aps_to_mp4_->initVideoConverter() < 0)
+    {
+        aps_to_mp4_.reset();
+        aps_is_recording_ = false;
+    }
+    recording_frame_callback_id_ = addApsFrameCallback(
+        [this](const dvsense::ApsFrame& rgb_frame) {
+            if (aps_is_recording_) {
+                if (save_frame_num_ == 0)
+                {
+                    aps_save_ts_offset_ = rgb_frame.exposure_end_timestamp;
+                    sync_json_["aps_offset_timestamp"] = aps_save_ts_offset_;
+                    if (json_file_.is_open()) {
+                        json_file_ << sync_json_.dump(4);
+                    }
+
+                }
+                if (rgb_frame.getDataSize() != 0)
+                {
+                    aps_to_mp4_->rgbToVideo(rgb_frame.data(), rgb_frame.exposure_end_timestamp - aps_save_ts_offset_);
+                }
+                save_frame_num_++;
+            }
+            else
+            {
+                save_frame_num_ = 0;
+            }
+        });
 	return true;
 }
 
@@ -74,44 +111,10 @@ int DvsRgbFusionCamera::start(dvsense::STREAM_TYPE type)
     }
     case dvsense::FUSION_STREAM:
     {
-        extTriggerSyncCallback();
+        open_ext_trigger_sync_ = true;
         dvs_camera_->startCamera();
         std::this_thread::sleep_for(std::chrono::milliseconds(1500));
         rgb_camera_->startCamera();
-
-        int aps_width = rgb_camera_->getWidth();
-        int aps_height = rgb_camera_->getHeight();
-        aps_to_mp4_ = std::make_shared<DataToVideo>();
-        aps_to_mp4_->setConverterFmt(AV_PIX_FMT_BGR24, AV_PIX_FMT_YUV420P);
-        aps_to_mp4_->setConverterFrameSize(aps_height, aps_width, aps_height, aps_width);
-        if (aps_to_mp4_->initVideoConverter() < 0)
-        {
-            aps_to_mp4_.reset();
-            aps_is_recording_ = false;
-        }
-        addApsFrameCallback(
-            [this](const dvsense::ApsFrame& rgb_frame) {
-                if (aps_is_recording_) {
-                    if (save_frame_num_ == 0)
-                    {
-                        aps_save_ts_offset_ = rgb_frame.exposure_end_timestamp;
-                        sync_json_["aps_offset_timestamp"] = aps_save_ts_offset_;
-                        if (json_file_.is_open()) {
-                            json_file_ << sync_json_.dump(4);
-                        }
-                    
-                    }
-                    if (rgb_frame.getDataSize() != 0)
-                    {
-                        aps_to_mp4_->rgbToVideo(rgb_frame.data(), rgb_frame.exposure_end_timestamp - aps_save_ts_offset_);
-                    }
-                    save_frame_num_++;
-                }
-                else
-                {
-                    save_frame_num_ = 0;
-                }
-            });
         return 0;
     }
     default:
@@ -121,10 +124,40 @@ int DvsRgbFusionCamera::start(dvsense::STREAM_TYPE type)
     return 0;
 }
 
-int DvsRgbFusionCamera::stop()
+int DvsRgbFusionCamera::stop(dvsense::STREAM_TYPE type)
 {
-	dvs_camera_->stopCamera();
-    rgb_camera_->stopCamera();
+    switch (type) {
+    case dvsense::DVS_STREAM:
+    {
+        std::cout << "Error: Standalone DVS camera operation is not supported." << std::endl;
+        return -1;
+    }
+    case dvsense::APS_STREAM:
+    {
+        //bool ret = dvs_camera_->removeTriggerInCallback(ext_trigger_sync_callback_id_);
+        //if (!ret)
+        //{
+        //    std::cout << "dvs camera removeTriggerInCallback failed!" << std::endl;
+        //}
+        open_ext_trigger_sync_ = false;
+        rgb_camera_->stopCamera();
+        return 0;
+    }
+    case dvsense::FUSION_STREAM:
+    {
+        open_ext_trigger_sync_ = false;
+        dvs_camera_->stopCamera();
+        rgb_camera_->stopCamera();
+        //bool ret = dvs_camera_->removeTriggerInCallback(ext_trigger_sync_callback_id_);
+        //if (!ret)
+        //{
+        //    std::cout << "dvs camera removeTriggerInCallback failed!" << std::endl;
+        //}
+        return 0;
+    }
+    default:
+        throw std::invalid_argument("Unknown STREAM_TYPE");
+    }
     return 0;
 }
 
@@ -194,7 +227,7 @@ int DvsRgbFusionCamera::stopRecording() {
 
 void DvsRgbFusionCamera::extTriggerSyncCallback()
 {
-    dvs_camera_->addTriggerInCallback(
+    ext_trigger_sync_callback_id_ = dvs_camera_->addTriggerInCallback(
         [this](const dvsense::EventTriggerIn& begin) {
 
             static uint64_t rise_trigger_timestamp = 0;
@@ -206,7 +239,7 @@ void DvsRgbFusionCamera::extTriggerSyncCallback()
             }
 
             cv::Mat new_frame;
-            while (!rgb_camera_->getNewRgbFrame(new_frame)) {
+            while (!rgb_camera_->getNewRgbFrame(new_frame) && open_ext_trigger_sync_) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
 

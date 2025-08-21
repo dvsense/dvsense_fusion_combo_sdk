@@ -82,6 +82,8 @@ namespace dvsense
 
 		dvsense::CameraDescription camera_desc_;
 
+		bool dvs_camera_running_ = false;
+
 	};
 }
 

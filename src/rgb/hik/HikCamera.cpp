@@ -226,6 +226,8 @@ int HikCamera::getNextFrame(FrameAndDrop& frame_and_drops) {
 }
 
 int HikCamera::startCamera() {
+    private_buffer_frames_ = std::queue<cv::Mat>();
+    aps_frames_drop_ = std::queue<FrameAndDrop>();
     int ret = MV_CC_StartGrabbing(aps_camera_handle_);
     if (ret != MV_OK) {
         std::cout << "MV_CC_StartGrabbing fail! ret = " << ret << std::endl;
@@ -275,6 +277,8 @@ void HikCamera::stopCamera() {
     int ret = 0;
     ret = MV_CC_StopGrabbing(aps_camera_handle_);
     if (ret != 0) std::cout << "MV_CC_StopGrabbing failed, error code: " << ret << std::endl;
+    private_buffer_frames_ = std::queue<cv::Mat>();
+    aps_frames_drop_ = std::queue<FrameAndDrop>();
 }
 
 int HikCamera::destroyCamera() {
