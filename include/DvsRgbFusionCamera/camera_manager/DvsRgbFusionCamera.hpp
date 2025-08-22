@@ -232,7 +232,7 @@ private:
 	void extTriggerSyncCallback();
 	uint32_t ext_trigger_sync_callback_id_ = 0;
 	uint32_t recording_frame_callback_id_ = 0;
-	bool open_ext_trigger_sync_ = false;
+	std::atomic<bool> open_ext_trigger_sync_ = false;
 
 	dvsense::CameraDescription camera_desc_;
 

@@ -134,7 +134,6 @@ int main(int argc, char* argv[])
 	cv::resizeWindow(window_name, 1280, 720);
 	// ----------------- Event processing and show -----------------
 	bool is_recording = false;
-	bool is_running = false;
 	bool stop_application = false;
 	while (!stop_application) {
 		if (!image_display_queue.empty()) {
@@ -142,7 +141,7 @@ int main(int argc, char* argv[])
 			cv::Mat new_frame = image_display_queue.front();
 			cv::imshow(window_name, new_frame);
 			image_display_queue.pop();
-		}
+		}	
 		int key = cv::waitKey(wait_time);
 
 		if ((key & 0xff) == 'q' || (key & 0xff) == 27) {
@@ -151,20 +150,6 @@ int main(int argc, char* argv[])
 		}
 
 		if ((key & 0xff) == ' ') {
-			if (!is_running)
-			{
-				fusionCamera->stop(dvsense::APS_STREAM);
-				//fusionCamera->stop();
-				//fusionCamera->startRecording(data_save_path);
-			}
-			if (is_running)
-			{
-				fusionCamera->start();
-				//fusionCamera->stopRecording();
-			}
-			is_running = !is_running;
-		}
-		if ((key & 0xff) == 's') {
 			if (!is_recording)
 			{
 				fusionCamera->startRecording(data_save_path);

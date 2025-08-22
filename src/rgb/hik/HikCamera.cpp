@@ -226,8 +226,7 @@ int HikCamera::getNextFrame(FrameAndDrop& frame_and_drops) {
 }
 
 int HikCamera::startCamera() {
-    private_buffer_frames_ = std::queue<cv::Mat>();
-    aps_frames_drop_ = std::queue<FrameAndDrop>();
+    last_frame_id_ = -1;
     int ret = MV_CC_StartGrabbing(aps_camera_handle_);
     if (ret != MV_OK) {
         std::cout << "MV_CC_StartGrabbing fail! ret = " << ret << std::endl;
@@ -272,8 +271,8 @@ int HikCamera::getHeight()
 }
 
 void HikCamera::stopCamera() {
-    is_grab_image_thread_running_ = false;
-    if (grab_frame_thread_.joinable()) grab_frame_thread_.join();
+     is_grab_image_thread_running_ = false;    
+    if (grab_frame_thread_.joinable()) grab_frame_thread_.join();   
     int ret = 0;
     ret = MV_CC_StopGrabbing(aps_camera_handle_);
     if (ret != 0) std::cout << "MV_CC_StopGrabbing failed, error code: " << ret << std::endl;
@@ -313,7 +312,7 @@ bool HikCamera::getNewRgbFrame(cv::Mat& output_frame) {
         //frame_drops.frame.copyTo(output_frame);
         output_frame = frame_drops.frame;
     }
-    else
+    if (frame_drops.drop_frame_num > 0)
     {
         output_frame = cv::Mat();
         for (int i = 0; i < frame_drops.drop_frame_num - 1; i++)
@@ -323,7 +322,7 @@ bool HikCamera::getNewRgbFrame(cv::Mat& output_frame) {
         private_buffer_frames_.emplace(frame_drops.frame);
     }
     aps_frames_drop_.pop();
-
+    
     //std::cout << "triggerin aps_frames size: " << aps_frames_drop_.size() << std::endl;
     return true;
 }
