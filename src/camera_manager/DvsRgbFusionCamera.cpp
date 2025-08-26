@@ -28,19 +28,18 @@ bool DvsRgbFusionCamera::findCamera(std::vector<dvsense::CameraDescription>& dvs
 
 bool DvsRgbFusionCamera::openCamera(DvsRgbCameraSerial dvs_rgb_serial_number)
 {
-	bool ret = dvs_camera_->openCamera(dvs_rgb_serial_number.dvs_serial_number);
+    bool ret = rgb_camera_->openCamera(dvs_rgb_serial_number.rgb_serial_number);
     if (!ret)
     {
         return false;
     }
-    ret = rgb_camera_->openCamera(dvs_rgb_serial_number.rgb_serial_number);
+	ret = dvs_camera_->openCamera(dvs_rgb_serial_number.dvs_serial_number);
     if (!ret)
     {
         return false;
     }
 
     extTriggerSyncCallback();
-    open_ext_trigger_sync_ = true;
 
     int aps_width = rgb_camera_->getWidth();
     int aps_height = rgb_camera_->getHeight();
@@ -101,6 +100,7 @@ int DvsRgbFusionCamera::start(dvsense::STREAM_TYPE type)
     switch (type) {
     case dvsense::DVS_STREAM: 
     {
+        ext_trigger_sync_running_ = false;
         dvs_camera_->startCamera();
         return 0;
     }
@@ -111,9 +111,10 @@ int DvsRgbFusionCamera::start(dvsense::STREAM_TYPE type)
     }
     case dvsense::FUSION_STREAM:
     {
-        open_ext_trigger_sync_ = true;
+        ext_trigger_sync_running_ = false;
         dvs_camera_->startCamera();
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        ext_trigger_sync_running_ = true;
         rgb_camera_->startCamera();
         return 0;
     }
@@ -134,15 +135,15 @@ int DvsRgbFusionCamera::stop(dvsense::STREAM_TYPE type)
     }
     case dvsense::APS_STREAM:
     {
-        open_ext_trigger_sync_ = false;
+        ext_trigger_sync_running_ = false;
         rgb_camera_->stopCamera();
         return 0;
     }
     case dvsense::FUSION_STREAM:
     {
-        open_ext_trigger_sync_ = false;
-        dvs_camera_->stopCamera();
+        ext_trigger_sync_running_ = false;
         rgb_camera_->stopCamera();
+        dvs_camera_->stopCamera();
         return 0;
     }
     default:
@@ -218,22 +219,21 @@ int DvsRgbFusionCamera::stopRecording() {
 void DvsRgbFusionCamera::extTriggerSyncCallback()
 {
     ext_trigger_sync_callback_id_ = dvs_camera_->addTriggerInCallback(
-        [this](const dvsense::EventTriggerIn& begin) {
-                    
+        [this](const dvsense::EventTriggerIn& begin) {          
             static uint64_t rise_trigger_timestamp = 0;
-            // only rising edges are accurate
-            if (begin.polarity == 0) 
+            if (begin.polarity == 1) 
             {
                 rise_trigger_timestamp = begin.timestamp;
                 return;            
             }
-            if (open_ext_trigger_sync_)
+
+            if (ext_trigger_sync_running_)
             {
                 cv::Mat new_frame;
-                while (!rgb_camera_->getNewRgbFrame(new_frame) && open_ext_trigger_sync_) {
+                while (!rgb_camera_->getNewRgbFrame(new_frame) && ext_trigger_sync_running_) {
                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 }
-
+               
                 dvsense::ApsFrame rgb_frame(new_frame.cols, new_frame.rows, rise_trigger_timestamp, begin.timestamp, new_frame.data, new_frame.total() * new_frame.elemSize());
                 if (rgb_frame.getDataSize() != 0)
                 {

@@ -1,4 +1,5 @@
 #include "DvsRgbFusionCamera/dvs/DvsEventCamera.hpp"
+#include "DvsenseBase/logging/logger.hh"
 
 namespace dvsense
 {

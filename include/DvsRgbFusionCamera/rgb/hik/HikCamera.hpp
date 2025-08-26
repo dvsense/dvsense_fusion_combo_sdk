@@ -50,8 +50,8 @@ private:
     MV_FRAME_OUT frame_out_ = {};
     std::atomic<bool> is_grab_image_thread_running_ = false;
     std::thread grab_frame_thread_;
-    std::queue<cv::Mat> private_buffer_frames_;
     std::mutex frame_buffer_mutex_;
+    std::queue<cv::Mat> frames_buffer_;
     float fps_;
  
     int frame_callback_id_num_ = 0;
@@ -60,8 +60,7 @@ private:
     void bufferToMat(cv::Mat& frame);
     int getNextFrame(FrameAndDrop& frame_and_drops);
 
-    unsigned long long last_frame_id_ = -1;
-    std::queue<FrameAndDrop> aps_frames_drop_;
+    int64_t last_frame_id_ = -1;
 
 
 
