@@ -83,7 +83,7 @@ bool HikCamera::openCamera(std::string serial_number) {
         return -1;
     }
 
-    ret = MV_CC_SetImageNodeNum(aps_camera_handle_, 100);
+    ret = MV_CC_SetImageNodeNum(aps_camera_handle_, 50);
     if (ret != MV_OK) {
         std::cout << "Set image node num failed fail! ret = " << ret << std::endl;
         return -1;
@@ -111,7 +111,7 @@ bool HikCamera::openCamera(std::string serial_number) {
     //ret = MV_CC_SetBoolValue(aps_camera_handle_, "ReverseX", true);
 
     //Auto Exposure
-    ret = MV_CC_SetIntValue(aps_camera_handle_, "AutoExposureTimeUpperLimit", 15000);
+    ret = MV_CC_SetIntValue(aps_camera_handle_, "AutoExposureTimeUpperLimit", 20000);
     ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "ExposureAuto", "Continuous");
 
     //// Gain
@@ -127,7 +127,11 @@ bool HikCamera::openCamera(std::string serial_number) {
     if (ret != MV_OK) {
         std::cout << "LineMode fail! ret = " << ret << std::endl;
     }
-
+    ret = MV_CC_SetBoolValue(aps_camera_handle_, "LineInverter", true);
+    if (ret != MV_OK) {
+        std::cout << "SetEnumValueByString fail! ret = " << ret << std::endl;
+    }
+    
     ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "LineSource", "ExposureStartActive");
     if (ret != MV_OK) {
         std::cout << "MV_CC_SetEnumValue LineSource fail! ret = " << ret << std::endl;
@@ -226,6 +230,8 @@ int HikCamera::getNextFrame(FrameAndDrop& frame_and_drops) {
 }
 
 int HikCamera::startCamera() {
+    last_frame_id_ = -1;
+    frames_buffer_ = std::queue<cv::Mat>();
     int ret = MV_CC_StartGrabbing(aps_camera_handle_);
     if (ret != MV_OK) {
         std::cout << "MV_CC_StartGrabbing fail! ret = " << ret << std::endl;
@@ -235,14 +241,18 @@ int HikCamera::startCamera() {
     is_grab_image_thread_running_ = true;
 
     grab_frame_thread_ = std::thread(
-        [this]() {            
+        [this]() {         
             while (is_grab_image_thread_running_) {
                 FrameAndDrop new_frame_drop;
                 int ret = getNextFrame(new_frame_drop);
                 if (ret == 0) {
                     {
                         std::unique_lock<std::mutex> lock(frame_buffer_mutex_);
-                        aps_frames_drop_.emplace(new_frame_drop);
+                        for (int i = 0; i < new_frame_drop.drop_frame_num; i++) 
+                        {
+                            frames_buffer_.emplace(cv::Mat());
+                        }
+                        frames_buffer_.emplace(new_frame_drop.frame);
                     }
                 }
                 else {
@@ -270,8 +280,8 @@ int HikCamera::getHeight()
 }
 
 void HikCamera::stopCamera() {
-    is_grab_image_thread_running_ = false;
-    if (grab_frame_thread_.joinable()) grab_frame_thread_.join();
+    is_grab_image_thread_running_ = false;    
+    if (grab_frame_thread_.joinable()) grab_frame_thread_.join();   
     int ret = 0;
     ret = MV_CC_StopGrabbing(aps_camera_handle_);
     if (ret != 0) std::cout << "MV_CC_StopGrabbing failed, error code: " << ret << std::endl;
@@ -291,35 +301,15 @@ int HikCamera::destroyCamera() {
 }
 
 bool HikCamera::getNewRgbFrame(cv::Mat& output_frame) {
-    if (!private_buffer_frames_.empty()) {
-        //private_buffer_frames_.front().copyTo(output_frame);
-        output_frame = private_buffer_frames_.front();
-        private_buffer_frames_.pop();
-        return true;
-    }
-
-    if (aps_frames_drop_.empty())
+    if (frames_buffer_.empty())
     {
         return false;
     }
-    std::unique_lock<std::mutex> lock(frame_buffer_mutex_);
-    FrameAndDrop frame_drops = aps_frames_drop_.front();
-    if (frame_drops.drop_frame_num == 0)
-    {
-        //frame_drops.frame.copyTo(output_frame);
-        output_frame = frame_drops.frame;
-    }
     else
     {
-        output_frame = cv::Mat();
-        for (int i = 0; i < frame_drops.drop_frame_num - 1; i++)
-        {
-            private_buffer_frames_.emplace();
-        }
-        private_buffer_frames_.emplace(frame_drops.frame);
+        output_frame = frames_buffer_.front();
+        frames_buffer_.pop();
+        return true;
     }
-    aps_frames_drop_.pop();
-
-    //std::cout << "triggerin aps_frames size: " << aps_frames_drop_.size() << std::endl;
     return true;
 }

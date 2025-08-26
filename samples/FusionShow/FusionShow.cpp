@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
 			cv::Mat new_frame = image_display_queue.front();
 			cv::imshow(window_name, new_frame);
 			image_display_queue.pop();
-		}
+		}	
 		int key = cv::waitKey(wait_time);
 
 		if ((key & 0xff) == 'q' || (key & 0xff) == 27) {
