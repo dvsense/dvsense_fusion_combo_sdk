@@ -91,11 +91,11 @@ find_package(Boost COMPONENTS filesystem REQUIRED)
 find_package(DvsenseDriver COMPONENTS Driver REQUIRED)
 
 add_library(DvsRgbFusionCamera SHARED
-    "src/camera_manager/DvsRgbFusionCamera.cpp"
+    "src/CameraManager/DvsRgbFusionCamera.cpp"
     "src/dvs/DvsEventCamera.cpp"
     "src/rgb/hik/HikCamera.cpp"
     "src/rgb/RgbCamera.cpp"   
-    "src/camera_manager/DataToVideo.cpp" )
+    "src/CameraManager/DataToVideo.cpp" )
 
 target_include_directories(DvsRgbFusionCamera
     PUBLIC
