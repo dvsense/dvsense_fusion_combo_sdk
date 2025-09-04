@@ -1,10 +1,16 @@
-#include "hik/HikCamera.hpp"
+#include "DvsRgbFusionCamera/rgb/hik/HikCamera.hpp"
 
 HikCamera::~HikCamera()
 {
 }
 
-bool HikCamera::findCamera() {
+
+bool HikCamera::isConnect()
+{
+    return MV_CC_IsDeviceConnected(aps_camera_handle_);
+}
+
+bool HikCamera::findCamera(std::vector<std::string>& serial_numbers) {
     MV_CC_DEVICE_INFO_LIST mvs_device_info_list;
     memset(&mvs_device_info_list, 0, sizeof(MV_CC_DEVICE_INFO_LIST));
     int ret = MV_CC_EnumDevices(MV_USB_DEVICE, &mvs_device_info_list);
@@ -19,19 +25,53 @@ bool HikCamera::findCamera() {
             if (p_device_info == nullptr) {
                 break;
             }
-            std::cout << "[device " << i << "]:" << std::endl;
-            std::cout << "UserDefinedName: " << p_device_info->SpecialInfo.stUsb3VInfo.chUserDefinedName << std::endl;
+            std::cout << i + 1 << " aps camera(s) found" << std::endl;
             std::cout << "Serial Number: " << p_device_info->SpecialInfo.stUsb3VInfo.chSerialNumber << std::endl;
-            std::cout << "Device Number: " << p_device_info->SpecialInfo.stUsb3VInfo.nDeviceNumber << std::endl << std::endl;
+            serial_numbers.push_back(reinterpret_cast<const char*>(p_device_info->SpecialInfo.stUsb3VInfo.chSerialNumber));
         }
     }
     else {
         std::cout << "Find No Devices!" << std::endl;
         return false;
     }
+    return true;
+}
 
-    std::cout << "Use the first device to create handle" << std::endl;
-    ret = MV_CC_CreateHandle(&aps_camera_handle_, mvs_device_info_list.pDeviceInfo[0]);
+bool HikCamera::openCamera(std::string serial_number) {
+    MV_CC_DEVICE_INFO_LIST mvs_device_info_list;
+    memset(&mvs_device_info_list, 0, sizeof(MV_CC_DEVICE_INFO_LIST));
+    int ret = MV_CC_EnumDevices(MV_USB_DEVICE, &mvs_device_info_list);
+    if (ret != MV_OK) {
+        std::cout << "MV_CC_EnumDevices fail! ret = " << ret << std::endl;
+        return false;
+    }
+    // print out the device information
+    int input_serial_number = -1;
+    if (mvs_device_info_list.nDeviceNum > 0) {
+        for (unsigned int i = 0; i < mvs_device_info_list.nDeviceNum; i++) {
+            MV_CC_DEVICE_INFO* p_device_info = mvs_device_info_list.pDeviceInfo[i];
+            if (p_device_info == nullptr) {
+                break;
+            }
+            std::string hik_number = reinterpret_cast<const char*>(p_device_info->SpecialInfo.stUsb3VInfo.chSerialNumber);
+            if (hik_number == serial_number) 
+            {
+                input_serial_number = i;
+                break;
+            }
+        }
+        if (input_serial_number == -1)
+        {
+            std::cout << "Aps camera input serial number no find!" << std::endl;
+            return false;
+        } 
+    }
+    else {
+        std::cout << "Find No Devices!" << std::endl;
+        return false;
+    }
+
+    ret = MV_CC_CreateHandle(&aps_camera_handle_, mvs_device_info_list.pDeviceInfo[input_serial_number]);
     if (ret != MV_OK) {
         std::cout << "MV_CC_CreateHandle fail! ret = " << ret << std::endl;
         return false;
@@ -43,7 +83,7 @@ bool HikCamera::findCamera() {
         return -1;
     }
 
-    ret = MV_CC_SetImageNodeNum(aps_camera_handle_, 100);
+    ret = MV_CC_SetImageNodeNum(aps_camera_handle_, 50);
     if (ret != MV_OK) {
         std::cout << "Set image node num failed fail! ret = " << ret << std::endl;
         return -1;
@@ -71,7 +111,7 @@ bool HikCamera::findCamera() {
     //ret = MV_CC_SetBoolValue(aps_camera_handle_, "ReverseX", true);
 
     //Auto Exposure
-    ret = MV_CC_SetIntValue(aps_camera_handle_, "AutoExposureTimeUpperLimit", 15000);
+    ret = MV_CC_SetIntValue(aps_camera_handle_, "AutoExposureTimeUpperLimit", 20000);
     ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "ExposureAuto", "Continuous");
 
     //// Gain
@@ -87,7 +127,11 @@ bool HikCamera::findCamera() {
     if (ret != MV_OK) {
         std::cout << "LineMode fail! ret = " << ret << std::endl;
     }
-
+    ret = MV_CC_SetBoolValue(aps_camera_handle_, "LineInverter", true);
+    if (ret != MV_OK) {
+        std::cout << "SetEnumValueByString fail! ret = " << ret << std::endl;
+    }
+    
     ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "LineSource", "ExposureStartActive");
     if (ret != MV_OK) {
         std::cout << "MV_CC_SetEnumValue LineSource fail! ret = " << ret << std::endl;
@@ -134,16 +178,19 @@ void HikCamera::bufferToMat(
             frame_out_.stFrameInfo.nHeight * frame_out_.stFrameInfo.nWidth * 3 + 2048;
         unsigned char* pDstData = (unsigned char*)malloc(dstBufSize);
 
-        MV_CC_PIXEL_CONVERT_PARAM_EX stConvertParam = { 0 };
-        stConvertParam.nWidth = frame_out_.stFrameInfo.nWidth;
-        stConvertParam.nHeight = frame_out_.stFrameInfo.nHeight;
-        stConvertParam.pSrcData = const_cast<unsigned char*>(frame_out_.pBufAddr);
-        stConvertParam.nSrcDataLen = frame_out_.stFrameInfo.nFrameLen;
-        stConvertParam.enSrcPixelType = frame_out_.stFrameInfo.enPixelType;
-        stConvertParam.enDstPixelType = PixelType_Gvsp_BGR8_Packed;
-        stConvertParam.pDstBuffer = pDstData;
-        stConvertParam.nDstBufferSize = dstBufSize;
-        MV_CC_ConvertPixelTypeEx(aps_camera_handle_, &stConvertParam);;
+        MV_CC_PIXEL_CONVERT_PARAM_EX stConvertParam = {
+            frame_out_.stFrameInfo.nWidth,                      // nWidth
+            frame_out_.stFrameInfo.nHeight,                     // nHeight
+            frame_out_.stFrameInfo.enPixelType,                 // enPixelType
+            const_cast<unsigned char*>(frame_out_.pBufAddr),    // pSrcData
+            frame_out_.stFrameInfo.nFrameLen,                   // nSrcDataLen
+            PixelType_Gvsp_BGR8_Packed,                         // enDstPixelType
+            pDstData,                                           // pDstBuffer
+            0,                                                  // nDstLen
+            dstBufSize,                                         // nDstBufferSize
+            0
+        };
+        MV_CC_ConvertPixelTypeEx(aps_camera_handle_, &stConvertParam);
         //frame = cv::Mat(frame_out_.stFrameInfo.nHeight, frame_out_.stFrameInfo.nWidth, 16,
         //    pDstData).clone();
         cv::Mat(frame_out_.stFrameInfo.nHeight, frame_out_.stFrameInfo.nWidth, 16, pDstData).copyTo(frame);
@@ -183,6 +230,8 @@ int HikCamera::getNextFrame(FrameAndDrop& frame_and_drops) {
 }
 
 int HikCamera::startCamera() {
+    last_frame_id_ = -1;
+    frames_buffer_ = std::queue<cv::Mat>();
     int ret = MV_CC_StartGrabbing(aps_camera_handle_);
     if (ret != MV_OK) {
         std::cout << "MV_CC_StartGrabbing fail! ret = " << ret << std::endl;
@@ -192,16 +241,18 @@ int HikCamera::startCamera() {
     is_grab_image_thread_running_ = true;
 
     grab_frame_thread_ = std::thread(
-        [this]() {
-            static int frame_num = 0;
-            
+        [this]() {         
             while (is_grab_image_thread_running_) {
                 FrameAndDrop new_frame_drop;
                 int ret = getNextFrame(new_frame_drop);
                 if (ret == 0) {
                     {
                         std::unique_lock<std::mutex> lock(frame_buffer_mutex_);
-                        aps_frames_drop_.emplace(new_frame_drop);
+                        for (int i = 0; i < new_frame_drop.drop_frame_num; i++) 
+                        {
+                            frames_buffer_.emplace(cv::Mat());
+                        }
+                        frames_buffer_.emplace(new_frame_drop.frame);
                     }
                 }
                 else {
@@ -216,21 +267,21 @@ int HikCamera::startCamera() {
 
 int HikCamera::getWidth()
 {
-    MVCC_INTVALUE_EX stIntValue = { 0 };
+    MVCC_INTVALUE_EX stIntValue {0, 0, 0, 0, 0};
     MV_CC_GetIntValueEx(aps_camera_handle_, "Width", &stIntValue);
     return stIntValue.nCurValue;
 }
 
 int HikCamera::getHeight()
 {
-    MVCC_INTVALUE_EX stIntValue = { 0 };
+    MVCC_INTVALUE_EX stIntValue = {0, 0, 0, 0, 0};
     MV_CC_GetIntValueEx(aps_camera_handle_, "Height", &stIntValue);
     return stIntValue.nCurValue;
 }
 
 void HikCamera::stopCamera() {
-    is_grab_image_thread_running_ = false;
-    if (grab_frame_thread_.joinable()) grab_frame_thread_.join();
+    is_grab_image_thread_running_ = false;    
+    if (grab_frame_thread_.joinable()) grab_frame_thread_.join();   
     int ret = 0;
     ret = MV_CC_StopGrabbing(aps_camera_handle_);
     if (ret != 0) std::cout << "MV_CC_StopGrabbing failed, error code: " << ret << std::endl;
@@ -250,35 +301,15 @@ int HikCamera::destroyCamera() {
 }
 
 bool HikCamera::getNewRgbFrame(cv::Mat& output_frame) {
-    if (!private_buffer_frames_.empty()) {
-        //private_buffer_frames_.front().copyTo(output_frame);
-        output_frame = private_buffer_frames_.front();
-        private_buffer_frames_.pop();
-        return true;
-    }
-
-    if (aps_frames_drop_.empty())
+    if (frames_buffer_.empty())
     {
         return false;
     }
-    std::unique_lock<std::mutex> lock(frame_buffer_mutex_);
-    FrameAndDrop frame_drops = aps_frames_drop_.front();
-    if (frame_drops.drop_frame_num == 0)
-    {
-        //frame_drops.frame.copyTo(output_frame);
-        output_frame = frame_drops.frame;
-    }
     else
     {
-        output_frame = cv::Mat();
-        for (int i = 0; i < frame_drops.drop_frame_num - 1; i++)
-        {
-            private_buffer_frames_.emplace();
-        }
-        private_buffer_frames_.emplace(frame_drops.frame);
+        output_frame = frames_buffer_.front();
+        frames_buffer_.pop();
+        return true;
     }
-    aps_frames_drop_.pop();
-
-    //std::cout << "triggerin aps_frames size: " << aps_frames_drop_.size() << std::endl;
     return true;
 }

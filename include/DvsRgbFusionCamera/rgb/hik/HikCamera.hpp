@@ -3,11 +3,12 @@
 #include "opencv2/core.hpp"
 #include "opencv2/imgproc.hpp"
 #include "opencv2/videoio.hpp"
+
 #include "MvCameraControl.h"
 
 #include <atomic>
 #include <thread>
-#include "RgbCamera.hpp"
+#include "DvsRgbFusionCamera/rgb/RgbCamera.hpp"
 
 struct FrameAndDrop
 {
@@ -26,9 +27,13 @@ public:
     }
 	~HikCamera();
 
-    bool findCamera() override;
+    bool findCamera(std::vector<std::string>& serial_numbers) override;
+
+    bool openCamera(std::string serial_number) override;
 
     int startCamera() override;
+
+    bool isConnect() override;
 
     void stopCamera() override;
 
@@ -42,11 +47,11 @@ public:
 
 private:
     void* aps_camera_handle_ = nullptr;
-    MV_FRAME_OUT frame_out_ = { 0 };
+    MV_FRAME_OUT frame_out_ = {};
     std::atomic<bool> is_grab_image_thread_running_ = false;
     std::thread grab_frame_thread_;
-    std::queue<cv::Mat> private_buffer_frames_;
     std::mutex frame_buffer_mutex_;
+    std::queue<cv::Mat> frames_buffer_;
     float fps_;
  
     int frame_callback_id_num_ = 0;
@@ -55,8 +60,7 @@ private:
     void bufferToMat(cv::Mat& frame);
     int getNextFrame(FrameAndDrop& frame_and_drops);
 
-    unsigned long long last_frame_id_ = -1;
-    std::queue<FrameAndDrop> aps_frames_drop_;
+    int64_t last_frame_id_ = -1;
 
 
 

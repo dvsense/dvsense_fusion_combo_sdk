@@ -45,6 +45,8 @@ namespace dvsense
 
 		bool openCamera(dvsense::CameraDescription);
 
+		bool isConnect();
+
 		int startCamera();
 
 		void stopCamera();
@@ -79,6 +81,8 @@ namespace dvsense
 		void openDvsTriggerIn();
 
 		dvsense::CameraDescription camera_desc_;
+
+		bool dvs_camera_running_ = false;
 
 	};
 }

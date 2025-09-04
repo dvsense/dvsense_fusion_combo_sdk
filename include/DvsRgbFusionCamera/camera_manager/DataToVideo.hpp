@@ -1,4 +1,4 @@
-#ifndef __DataToVideo_HPP__
+    #ifndef __DataToVideo_HPP__
 #define __DataToVideo_HPP__
 
 extern "C" {
@@ -6,7 +6,7 @@ extern "C" {
 #include <libavcodec/avcodec.h>      
 #include <libavutil/imgutils.h>       
 #include <libswscale/swscale.h>      
-#include <libavutil/error.h>  
+#include <libavutil/error.h>
 }
 #include <string>
 

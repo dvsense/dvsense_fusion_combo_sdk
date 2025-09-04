@@ -1,18 +1,28 @@
 #pragma once
+
 #include "opencv2/opencv.hpp"
 #include "opencv2/core.hpp"
 #include "opencv2/imgproc.hpp"
 #include "opencv2/videoio.hpp"
 
-#include "DvsEventCamera.hpp"
-#include "RgbCamera.hpp"
-#include "DataToVideo.hpp"
+#include "DvsRgbFusionCamera/dvs/DvsEventCamera.hpp"
+#include "DvsRgbFusionCamera/rgb/RgbCamera.hpp"
+#include "DvsRgbFusionCamera/camera_manager/DataToVideo.hpp"
+#include "DvsRgbCalib/json/json.hpp"
+
+using json = nlohmann::json;
 
 #ifdef _WIN32
 #define DVSENSE_API __declspec(dllexport)
 #else
 #define DVSENSE_API
 #endif // _WIN32
+
+struct DvsRgbCameraSerial
+{
+	dvsense::CameraDescription dvs_serial_number;
+	std::string rgb_serial_number;
+};
 
 using FrameCallback = std::function<void(dvsense::ApsFrame&)>;
 
@@ -28,6 +38,28 @@ public:
 	DvsRgbFusionCamera(float fps = 30);
 
 	~DvsRgbFusionCamera();
+
+	/**
+	 * \~english @brief Find the camera
+	 * \~english @param dvs_camera_descs DVS camera serial numbers
+	 * \~english @param aps_serial_numbers RGB camera serial numbers
+	 * \~english @return Return true if successfully find, false otherwise
+	 * \~chinese @brief 查找相机
+	 * \~chinese @param dvs_camera_descs DVS相机序列号列表
+	 * \~chinese @param aps_serial_numbers RGB相机序列号列表
+	 * \~chinese @return 如果成功找到则返回true，否则返回false
+	 */
+	bool findCamera(std::vector<dvsense::CameraDescription>& dvs_camera_descs, std::vector<std::string>& aps_serial_numbers);
+
+	/**
+	 * \~english @brief Opens the camera
+	 * \~english @param dvs_rgb_serial_number DVS camera and RGB camera serial number struct
+	 * \~english @return Returns true if successfully opened, false otherwise
+	 * \~chinese @brief 打开相机
+	 * \~chinese @param dvs_rgb_serial_number 包含DVS相机和RGB相机序列号的结构体
+	 * \~chinese @return 如果成功打开则返回true，否则返回false
+	 */
+	bool openCamera(DvsRgbCameraSerial dvs_rgb_serial_number);
 
 	/**
 	 * \~english @brief Check if the camera is connected
@@ -116,11 +148,13 @@ public:
 
 	/**
 	 * \~english @brief Start the camera
+	 * \~english @param type Camera type to open
 	 * \~english @return int 0 if success, otherwise return error code
 	 * \~chinese @brief 开启相机
+	 * \~chinese @param type 打开相机类型
 	 * \~chinese @return int 如果成功开启则返回0，否则返回错误代码
 	 */
-	int start();
+	int start(dvsense::STREAM_TYPE type = dvsense::FUSION_STREAM);
 
 	/**
 	 * \~english @brief Start recording events
@@ -134,11 +168,13 @@ public:
 
 	/**
 	 * \~english @brief Stop the camera
+	 * \~english @param type Camera type to close
 	 * \~english @return int 0 if success, otherwise return error code
 	 * \~chinese @brief ͣ停止相机
+	 * \~chinese @param type 停止相机类型
 	 * \~chinese @return int 如果成功停止则返回0，否则返回错误代码
 	 */
-	int stop();
+	int stop(dvsense::STREAM_TYPE type = dvsense::FUSION_STREAM);
 
 	/**
 	 * \~english @brief Stop recording events
@@ -179,7 +215,6 @@ public:
 private:
 	std::shared_ptr<dvsense::DvsEventCamera> dvs_camera_;
 	std::unique_ptr<RgbCamera> rgb_camera_;
-	std::vector<dvsense::CameraDescription> dvs_camera_descs_;
 
 	float aps_fps_;
 	std::mutex event_buffer_mutex_;
@@ -195,9 +230,9 @@ private:
 
 	// ----- sync -----
 	void extTriggerSyncCallback();
-
-	bool findCamera();
-	bool openCamera();
+	uint32_t ext_trigger_sync_callback_id_ = 0;
+	uint32_t recording_frame_callback_id_ = 0;
+	std::atomic<bool> ext_trigger_sync_running_ = false;
 
 	dvsense::CameraDescription camera_desc_;
 
@@ -205,6 +240,10 @@ private:
 	std::shared_ptr<DataToVideo> aps_decoder_;
 	bool aps_is_recording_ = false;
 	dvsense::TimeStamp aps_save_ts_offset_;
+	uint64_t save_frame_num_ = 0;
+
+	json sync_json_;
+	std::ofstream json_file_;
 
 };
 
