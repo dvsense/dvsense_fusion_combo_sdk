@@ -31,6 +31,10 @@ DVS事件相机[DVSLume](https://dvsense.com/dvslume)，RGB相机（目前支持
 ## 克隆 GitHub 存储库
 在终端中输入以下克隆命令：  
 
+~~~        bash
+git clone git@github.com:dvsense/dvsense_fusion_combo_sdk.git
+~~~
+
 ## 编译
 1. 设置CMake中RGB相机驱动的路径MVS_LIB_SEARCH_PATHS和MVS_INCLUDE_DIR；  
     可根据实际情况修改路径  
@@ -64,13 +68,15 @@ DVS事件相机[DVSLume](https://dvsense.com/dvslume)，RGB相机（目前支持
     
     # 安装 FFmpeg
     sudo apt install ffmpeg libavcodec-dev libavformat-dev libswscale-dev
-
+    
     # 安装 OpenCV 和 Python 绑定
     sudo apt install libopencv-dev python3-opencv
 ## 克隆 GitHub 存储库
 在终端中输入以下克隆命令：  
 
-    git clone ______
+```bash
+git clone git@github.com:dvsense/dvsense_fusion_combo_sdk.git
+```
 ## 编译
 1. 设置CMake中RGB相机驱动的路径MVS_LIB_SEARCH_PATHS和MVS_INCLUDE_DIR；  
 可根据实际情况修改路径  
@@ -110,11 +116,11 @@ DVS事件相机[DVSLume](https://dvsense.com/dvslume)，RGB相机（目前支持
         cv::Mat dvs_frame(dvs_height, dvs_width, CV_8UC3, cv::Scalar(0, 0, 0))；
         fusionCamera->addEventsStreamHandleCallback([&dvs_frame](const dvsense::EventIterator_t begin, const dvsense::EventIterator_t end) 
         {
-		    for (auto it = begin; it != end; ++it) 
+	        for (auto it = begin; it != end; ++it) 
             {
-				dvs_frame.at<cv::Vec3b>(it->y, it->x) = (it->polarity) ? color_on : color_off;			
+	    		dvs_frame.at<cv::Vec3b>(it->y, it->x) = (it->polarity) ? color_on : color_off;			
             }
-		});
+	    });
 
 7. 添加APS相机图像帧回调
 
@@ -149,5 +155,4 @@ DVS事件相机[DVSLume](https://dvsense.com/dvslume)，RGB相机（目前支持
 
 - DVS-RGB融合模块（DvsRgbFusionCamera ）
   该模块负责统筹底层双相机的协同工作：统一管理双相机的启动、停止流程和基于 trigger 信号实现事件数据与 RGB 图像的微秒级时域对齐等功能。
-
 
