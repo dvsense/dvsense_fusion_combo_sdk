@@ -1,4 +1,4 @@
-#include "DvsRgbFusionCamera/camera_manager/DvsRgbFusionCamera.hpp"
+#include "DvsRgbFusionCamera/CameraManager/DvsRgbFusionCamera.hpp"
 #include "DvsRgbCalib/CalibrateThroughFile.hpp"
 
 // purple - magenta

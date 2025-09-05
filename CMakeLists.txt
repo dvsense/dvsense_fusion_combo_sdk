@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(fusion_camera)
+project(DvsenseComboSdk)
 
 # Use standard install directories (bin, lib, include, etc.)
 include(GNUInstallDirs)
