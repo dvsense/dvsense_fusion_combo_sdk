@@ -1,4 +1,4 @@
-#include "DvsRgbFusionCamera/camera_manager/DvsRgbFusionCamera.hpp"
+#include "DvsRgbFusionCamera/CameraManager/DvsRgbFusionCamera.hpp"
 #include "DvsenseBase/logging/logger.hh"
 
 DvsRgbFusionCamera::DvsRgbFusionCamera(float aps_fps): aps_fps_(aps_fps)
