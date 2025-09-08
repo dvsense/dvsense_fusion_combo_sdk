@@ -1,5 +1,4 @@
-    #ifndef __DataToVideo_HPP__
-#define __DataToVideo_HPP__
+#pragma once
 
 extern "C" {
 #include <libavformat/avformat.h>     
@@ -73,4 +72,3 @@ extern "C" {
         std::string jpeg_output_path_;
     };
 
-#endif //!__DataToVideo_HPP__

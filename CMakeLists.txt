@@ -108,8 +108,7 @@ target_include_directories(DvsRgbFusionCamera
 target_link_libraries(DvsRgbFusionCamera 
 PUBLIC
     ${MVS_LIB}
-    ${OpenCV_LIBS}
-    ${Boost_LIBRARIES}
+    opencv_core
     DvsenseDriver::Driver
     ${AVCODEC_LIB}
     ${AVFORMAT_LIB}
@@ -132,7 +131,8 @@ PUBLIC
 
 target_link_libraries(DvsRgbCalib 
 PUBLIC
-    ${OpenCV_LIBS}
+    opencv_core
+    opencv_imgproc
 ) 
 
 # Provide a namespaced ALIAS

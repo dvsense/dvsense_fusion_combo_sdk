@@ -1,13 +1,9 @@
 #pragma once
 
 #ifdef _WIN32
-#include "opencv2/opencv.hpp"
-#include "opencv2/core.hpp"
-#include "opencv2/imgproc.hpp"
+#include <opencv2/core.hpp>
 #else 
-#include "opencv4/opencv2/opencv.hpp"
 #include "opencv4/opencv2/core.hpp"
-#include "opencv4/opencv2/imgproc.hpp"
 #endif
 
 class RgbCamera {
@@ -32,7 +28,11 @@ public:
 
 	virtual bool getNewRgbFrame(cv::Mat& output_frame) = 0;
 
-	static std::unique_ptr<RgbCamera> create(float fps);
+	template<typename RGBCameraType>
+	static std::unique_ptr<RgbCamera> create(float fps)
+	{
+		return std::make_unique<RGBCameraType>(fps);
+	}
 
 };
 

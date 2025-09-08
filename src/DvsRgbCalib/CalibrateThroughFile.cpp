@@ -3,6 +3,13 @@
 
 using json = nlohmann::json;
 
+CalibrateThroughFile::CalibrateThroughFile(std::string config_file) :
+    config_file_(config_file)
+{
+    plane_normal_ = (cv::Mat_<double>(3, 1) << 0, 0, 1);
+    readParams();
+}
+
 CalibrateThroughFile::~CalibrateThroughFile()
 {
 }
@@ -63,7 +70,7 @@ cv::Mat CalibrateThroughFile::getApsToDvsHomographyMatrix(double distance)
 
 cv::Mat CalibrateThroughFile::warpImage(const cv::Mat& src, const cv::Mat& H, cv::Size dstSize) {
 	cv::Mat dst;
-	warpPerspective(src, dst, H, dstSize, cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar(0));
+	cv::warpPerspective(src, dst, H, dstSize, cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar(0));
 	return dst;
 }
 

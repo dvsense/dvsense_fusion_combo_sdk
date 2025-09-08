@@ -11,12 +11,8 @@
 #include <iomanip>
 #include <sstream>
 #include <fstream>
-#include "boost/filesystem.hpp"
 
-#include "opencv2/opencv.hpp"
-#include "opencv2/core.hpp"
-#include "opencv2/imgproc.hpp"
-#include "opencv2/videoio.hpp"
+#include <opencv2/core.hpp>
 
 #include <DvsenseDriver/camera/DvsCameraManager.hpp>
 #include "DvsenseHal/camera/DvsCameraUtils.hpp"
@@ -69,20 +65,19 @@ namespace dvsense
 
 
 	private:
+        void openDvsTriggerIn();
+
 		dvsense::CameraDevice dvs_camera_;
 
 		dvsense::DvsCameraManager camera_manager_;
 
-		std::map<uint32_t, const NewTriggerInCallback> new_trigger_in_callbacks_;
-		uint32_t trigger_in_callback_id_num_ = 0;
+		uint32_t trigger_in_callback_id_num_;
 
 		std::thread trigger_thread_;
 
-		void openDvsTriggerIn();
-
 		dvsense::CameraDescription camera_desc_;
 
-		bool dvs_camera_running_ = false;
+		bool dvs_camera_running_;
 
 	};
 }

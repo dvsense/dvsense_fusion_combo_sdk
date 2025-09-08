@@ -1,4 +1,15 @@
 #include "DvsRgbFusionCamera/rgb/hik/HikCamera.hpp"
+#include <iostream>
+
+HikCamera::HikCamera(float fps) : fps_(fps) {
+    is_grab_image_thread_running_ = false;
+    frame_callback_id_num_ = 0;
+    last_frame_id_ = -1;
+    int ret = MV_CC_Initialize();
+    if (ret != MV_OK) {
+        std::cout << "MV_CC_Initialize fail! ret = " << ret << std::endl;
+    }
+}
 
 HikCamera::~HikCamera()
 {
@@ -141,6 +152,9 @@ bool HikCamera::openCamera(std::string serial_number) {
     if (ret != MV_OK) {
         std::cout << "MV_CC_SetEnable fail! ret = " << ret << std::endl;
     }
+
+    int64_t set_width = int(getWidth() / 16) * 16;
+    MV_CC_SetIntValueEx(aps_camera_handle_, "Width", set_width);
 
     return true;
 }
