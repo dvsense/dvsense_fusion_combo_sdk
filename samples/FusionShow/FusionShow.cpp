@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 
 	bool is_calibration_active = true;
 
-	std::unique_ptr<CalibrateThroughFile> calibrator = std::make_unique<CalibrateThroughFile>("../../../../calibration_result.json");
+	std::unique_ptr<CalibrateThroughFile> calibrator = std::make_unique<CalibrateThroughFile>("D:/FusionCamera/dvsense_fusion_combo_sdk/calibration_result.json");
 	cv::Mat H = calibrator->getApsToDvsHomographyMatrix(600);
 
 	std::queue<cv::Mat> image_display_queue;

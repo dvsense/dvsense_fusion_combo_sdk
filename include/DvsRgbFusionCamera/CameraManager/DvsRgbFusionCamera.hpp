@@ -1,5 +1,6 @@
 #pragma once
 
+#include <queue>
 #include "DvsRgbFusionCamera/dvs/DvsEventCamera.hpp"
 #include "DvsRgbFusionCamera/rgb/RgbCamera.hpp"
 #include "DvsRgbFusionCamera/CameraManager/DataToVideo.hpp"
@@ -12,6 +13,17 @@ using json = nlohmann::json;
 #else
 #define DVSENSE_API
 #endif // _WIN32
+
+struct ApsFrameTimeStamp
+{
+	std::vector<uint8_t> data;
+	uint64_t aps_time;
+
+	ApsFrameTimeStamp() : aps_time(0) {}
+
+	ApsFrameTimeStamp(std::vector<uint8_t> data_vec, uint64_t time)
+		: data(std::move(data_vec)), aps_time(time) {}
+};
 
 struct DvsRgbCameraSerial
 {
@@ -241,6 +253,10 @@ private:
 	json sync_json_;
 	std::ofstream json_file_;
 
+	std::queue<ApsFrameTimeStamp> aps_data_queue_;
+	std::mutex aps_queue_mutex_;
+	bool recording_running_;
+	std::thread save_to_mp4_thread_;	
 };
 
 template<typename RGBCameraType>

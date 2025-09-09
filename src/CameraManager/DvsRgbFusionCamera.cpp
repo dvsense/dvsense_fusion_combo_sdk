@@ -77,7 +77,15 @@ bool DvsRgbFusionCamera<RGBCameraType>::openCamera(DvsRgbCameraSerial dvs_rgb_se
                 }
                 if (rgb_frame.getDataSize() != 0)
                 {
-                    aps_to_mp4_->rgbToVideo(rgb_frame.data(), rgb_frame.exposure_end_timestamp - aps_save_ts_offset_);
+                    const uint8_t* sharedData = rgb_frame.data();
+                    size_t dataSize = rgb_frame.getDataSize();
+                    std::unique_lock<std::mutex> lock(aps_queue_mutex_);
+                    aps_data_queue_.emplace(
+                        std::vector<uint8_t>(sharedData, sharedData + dataSize),
+                        rgb_frame.exposure_end_timestamp - aps_save_ts_offset_
+                    );
+                    //aps_to_mp4_->rgbToVideo(rgb_frame.data(), rgb_frame.exposure_end_timestamp - aps_save_ts_offset_);
+                    
                 }
                 save_frame_num_++;
             }
@@ -86,6 +94,26 @@ bool DvsRgbFusionCamera<RGBCameraType>::openCamera(DvsRgbCameraSerial dvs_rgb_se
                 save_frame_num_ = 0;
             }
         });
+
+    recording_running_ = true;
+    save_to_mp4_thread_ = std::thread(
+        [this]() {
+            while(recording_running_)
+            {
+                if (aps_is_recording_ && !aps_data_queue_.empty())
+                {
+                    std::unique_lock<std::mutex> lock(aps_queue_mutex_);
+                    ApsFrameTimeStamp out_aps_data = aps_data_queue_.front();
+                    aps_to_mp4_->rgbToVideo(out_aps_data.data.data(), out_aps_data.aps_time);
+                    aps_data_queue_.pop();
+                }
+                else
+                {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                }
+            }
+        }
+    );
 	return true;
 }
 
@@ -153,6 +181,7 @@ int DvsRgbFusionCamera<RGBCameraType>::stop(dvsense::STREAM_TYPE type)
     {
         ext_trigger_sync_running_ = false;
         rgb_camera_->stopCamera();
+        //if (save_to_mp4_thread_.joinable()) save_to_mp4_thread_.join();
         return 0;
     }
     case dvsense::FUSION_STREAM:
@@ -160,6 +189,7 @@ int DvsRgbFusionCamera<RGBCameraType>::stop(dvsense::STREAM_TYPE type)
         ext_trigger_sync_running_ = false;
         rgb_camera_->stopCamera();
         dvs_camera_->stopCamera();
+        /*if (save_to_mp4_thread_.joinable()) save_to_mp4_thread_.join();*/
         return 0;
     }
     default:
@@ -336,6 +366,8 @@ int DvsRgbFusionCamera<RGBCameraType>::destroy()
     dvs_camera_.reset();
     int ret = rgb_camera_->destroyCamera();
     rgb_camera_.reset();
+    recording_running_ = false;
+    if (save_to_mp4_thread_.joinable()) save_to_mp4_thread_.join();
     return ret;
 }
 
