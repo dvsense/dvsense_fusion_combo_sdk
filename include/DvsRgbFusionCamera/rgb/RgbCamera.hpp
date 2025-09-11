@@ -1,12 +1,7 @@
 #pragma once
 
-#ifdef _WIN32
 #include <opencv2/core.hpp>
 #include <DvsenseDriver/camera/DvsCameraManager.hpp>
-#else 
-#include "opencv4/opencv2/core.hpp"
-#include <DvsenseDriver/camera/DvsCameraManager.hpp>
-#endif
 
 class RgbCamera {
 public:

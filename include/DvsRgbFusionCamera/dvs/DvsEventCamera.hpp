@@ -65,8 +65,6 @@ namespace dvsense
 
 
 	private:
-        void openDvsTriggerIn();
-
 		dvsense::CameraDevice dvs_camera_;
 
 		dvsense::DvsCameraManager camera_manager_;

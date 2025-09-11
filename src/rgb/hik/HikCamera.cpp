@@ -105,7 +105,7 @@ bool HikCamera::openCamera(std::string serial_number) {
     //Set HB mode to off
     ret = MV_CC_SetEnumValue(aps_camera_handle_, "ImageCompressionMode", 0);
 
-    // set frame rate to 30 FPS
+    // set frame rate
     ret = MV_CC_SetFloatValue(aps_camera_handle_, "AcquisitionFrameRate", fps_);
     std::cout << "Aps frame fps is: " << fps_ << std::endl;
     if (ret != MV_OK) {
@@ -153,6 +153,7 @@ bool HikCamera::openCamera(std::string serial_number) {
         std::cout << "MV_CC_SetEnable fail! ret = " << ret << std::endl;
     }
 
+    // Here setting the width is for better compatibility when using ffmpeg which could not handle the width that is not divisible by 16 in some cases.
     int64_t set_width = int(getWidth() / 16) * 16;
     MV_CC_SetIntValueEx(aps_camera_handle_, "Width", set_width);
 
@@ -182,14 +183,10 @@ void HikCamera::bufferToMat(
         break;
     }
     if (isMono) {
-        //frame = cv::Mat(
-        //    frame_out_.stFrameInfo.nHeight, frame_out_.stFrameInfo.nWidth, 0,
-        //    frame_out_.pBufAddr).clone();
+        // TODO: handle mono case
     }
     else {
         // convert to bgr
-        //unsigned int dstBufSize = frame_out_.stFrameInfo.nHeight * frame_out_.stFrameInfo.nWidth * 3 + 2048;
-        //unsigned char* pDstData = (unsigned char*)malloc(dstBufSize);
         MV_CC_PIXEL_CONVERT_PARAM_EX stConvertParam = {
             frame_out_.stFrameInfo.nWidth,                      // nWidth
             frame_out_.stFrameInfo.nHeight,                     // nHeight
@@ -204,9 +201,6 @@ void HikCamera::bufferToMat(
             0
         };
         MV_CC_ConvertPixelTypeEx(aps_camera_handle_, &stConvertParam);
-        ////cv::Mat(frame_out_.stFrameInfo.nHeight, frame_out_.stFrameInfo.nWidth, 16, pDstData).copyTo(frame);
-        //free(pDstData);
-        //pDstData = NULL;
     }
 }
 
