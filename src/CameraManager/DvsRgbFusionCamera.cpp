@@ -77,15 +77,14 @@ bool DvsRgbFusionCamera<RGBCameraType>::openCamera(DvsRgbCameraSerial dvs_rgb_se
                 }
                 if (rgb_frame.getDataSize() != 0)
                 {
-                    const uint8_t* sharedData = rgb_frame.data();
-                    size_t dataSize = rgb_frame.getDataSize();
-                    std::unique_lock<std::mutex> lock(aps_queue_mutex_);
-                    aps_data_queue_.emplace(
-                        std::vector<uint8_t>(sharedData, sharedData + dataSize),
-                        rgb_frame.exposure_end_timestamp - aps_save_ts_offset_
-                    );
-                    //aps_to_mp4_->rgbToVideo(rgb_frame.data(), rgb_frame.exposure_end_timestamp - aps_save_ts_offset_);
-                    
+                    //const uint8_t* sharedData = rgb_frame.data();
+                    //size_t dataSize = rgb_frame.getDataSize();
+                    //std::unique_lock<std::mutex> lock(aps_queue_mutex_);
+                    //aps_data_queue_.emplace(
+                    //    std::vector<uint8_t>(sharedData, sharedData + dataSize),
+                    //    rgb_frame.exposure_end_timestamp - aps_save_ts_offset_
+                    //);
+                    aps_to_mp4_->rgbToVideo(rgb_frame.data(), rgb_frame.exposure_end_timestamp - aps_save_ts_offset_);       
                 }
                 save_frame_num_++;
             }
@@ -95,7 +94,7 @@ bool DvsRgbFusionCamera<RGBCameraType>::openCamera(DvsRgbCameraSerial dvs_rgb_se
             }
         });
 
-    recording_running_ = true;
+    recording_running_ = false;
     save_to_mp4_thread_ = std::thread(
         [this]() {
             while(recording_running_)
@@ -287,17 +286,18 @@ void DvsRgbFusionCamera<RGBCameraType>::extTriggerSyncCallback()
 
             if (ext_trigger_sync_running_)
             {
-                cv::Mat new_frame;
+                dvsense::ApsFrame new_frame(0, 0);
                 while (!rgb_camera_->getNewRgbFrame(new_frame) && ext_trigger_sync_running_) {
                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 }
-               
-                dvsense::ApsFrame rgb_frame(new_frame.cols, new_frame.rows, rise_trigger_timestamp, begin.timestamp, new_frame.data, new_frame.total() * new_frame.elemSize());
-                if (rgb_frame.getDataSize() != 0)
+
+                new_frame.exposure_start_timestamp = rise_trigger_timestamp;
+                new_frame.exposure_end_timestamp = begin.timestamp;
+                if (new_frame.getDataSize() != 0)
                 {
                     for (const auto& callback : frame_callbacks_) {
-                        callback.second(rgb_frame);
-                    }                
+                        callback.second(new_frame);
+                    }
                 }
             }
         }

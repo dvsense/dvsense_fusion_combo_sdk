@@ -160,7 +160,7 @@ bool HikCamera::openCamera(std::string serial_number) {
 }
 
 void HikCamera::bufferToMat(
-    cv::Mat& frame
+    dvsense::ApsFrame& rgb_frame
 ) {
     bool isMono;  // Mono or not
     switch (frame_out_.stFrameInfo.enPixelType) {
@@ -182,16 +182,14 @@ void HikCamera::bufferToMat(
         break;
     }
     if (isMono) {
-        frame = cv::Mat(
-            frame_out_.stFrameInfo.nHeight, frame_out_.stFrameInfo.nWidth, 0,
-            frame_out_.pBufAddr).clone();
+        //frame = cv::Mat(
+        //    frame_out_.stFrameInfo.nHeight, frame_out_.stFrameInfo.nWidth, 0,
+        //    frame_out_.pBufAddr).clone();
     }
     else {
         // convert to bgr
-        unsigned int dstBufSize =
-            frame_out_.stFrameInfo.nHeight * frame_out_.stFrameInfo.nWidth * 3 + 2048;
-        unsigned char* pDstData = (unsigned char*)malloc(dstBufSize);
-
+        //unsigned int dstBufSize = frame_out_.stFrameInfo.nHeight * frame_out_.stFrameInfo.nWidth * 3 + 2048;
+        //unsigned char* pDstData = (unsigned char*)malloc(dstBufSize);
         MV_CC_PIXEL_CONVERT_PARAM_EX stConvertParam = {
             frame_out_.stFrameInfo.nWidth,                      // nWidth
             frame_out_.stFrameInfo.nHeight,                     // nHeight
@@ -199,45 +197,44 @@ void HikCamera::bufferToMat(
             const_cast<unsigned char*>(frame_out_.pBufAddr),    // pSrcData
             frame_out_.stFrameInfo.nFrameLen,                   // nSrcDataLen
             PixelType_Gvsp_BGR8_Packed,                         // enDstPixelType
-            pDstData,                                           // pDstBuffer
+            //pDstData,                                         // pDstBuffer
+            rgb_frame.data(),
             0,                                                  // nDstLen
-            dstBufSize,                                         // nDstBufferSize
+            rgb_frame.getDataSize(),                                         // nDstBufferSize
             0
         };
         MV_CC_ConvertPixelTypeEx(aps_camera_handle_, &stConvertParam);
-        //frame = cv::Mat(frame_out_.stFrameInfo.nHeight, frame_out_.stFrameInfo.nWidth, 16,
-        //    pDstData).clone();
-        cv::Mat(frame_out_.stFrameInfo.nHeight, frame_out_.stFrameInfo.nWidth, 16, pDstData).copyTo(frame);
-        free(pDstData);
-        pDstData = NULL;
+        ////cv::Mat(frame_out_.stFrameInfo.nHeight, frame_out_.stFrameInfo.nWidth, 16, pDstData).copyTo(frame);
+        //free(pDstData);
+        //pDstData = NULL;
     }
 }
 
-int HikCamera::getNextFrame(FrameAndDrop& frame_and_drops) {
+int HikCamera::getNextFrame(dvsense::ApsFrame& rgb_frame, int& drop_frame_num) {
     int ret = MV_CC_GetImageBuffer(aps_camera_handle_, &frame_out_, 1000);
     if (ret != MV_OK) {
         std::cout << "MV_CC_GetOneFrameTimeout fail! ret = " << std::to_string(ret) << std::endl;
-        frame_and_drops.frame = cv::Mat(frame_out_.stFrameInfo.nHeight, frame_out_.stFrameInfo.nWidth, CV_8UC1);
+        rgb_frame = dvsense::ApsFrame(0, 0);//size
         return -1;
     }
     else
     {
         unsigned long long current_frame_id = frame_out_.stFrameInfo.nFrameNum;
         //std::cout << "currentFrameID: " << current_frame_id << std::endl;
-        frame_and_drops.drop_frame_num = current_frame_id - last_frame_id_ - 1;
-        if (frame_and_drops.drop_frame_num > 0)
+        drop_frame_num = current_frame_id - last_frame_id_ - 1;
+        if (drop_frame_num > 0)
         {
-            std::cout << "Aps drop a frame" << std::endl;
+            std::cout << "Warning! Aps drop a frame." << std::endl;
         }
         last_frame_id_ = current_frame_id;
     }
 
-    bufferToMat(frame_and_drops.frame);
+    bufferToMat(rgb_frame);
 
     ret = MV_CC_FreeImageBuffer(aps_camera_handle_, &frame_out_);
     if (ret != MV_OK) {
         std::cout << "MV_CC_ReleaseImageBuffer fail! ret = " << ret << std::endl;
-        frame_and_drops.frame = cv::Mat(frame_out_.stFrameInfo.nHeight, frame_out_.stFrameInfo.nWidth, CV_8UC1);
+        rgb_frame = dvsense::ApsFrame(0, 0);
         return -1;
     }
     return 0;
@@ -245,32 +242,36 @@ int HikCamera::getNextFrame(FrameAndDrop& frame_and_drops) {
 
 int HikCamera::startCamera() {
     last_frame_id_ = -1;
-    frames_buffer_ = std::queue<cv::Mat>();
+    frames_buffer_ = std::queue<dvsense::ApsFrame>();
     int ret = MV_CC_StartGrabbing(aps_camera_handle_);
     if (ret != MV_OK) {
         std::cout << "MV_CC_StartGrabbing fail! ret = " << ret << std::endl;
         return -1;
     }
     
+
+    int aps_width = getWidth();
+    int aps_height = getHeight();
     is_grab_image_thread_running_ = true;
 
     grab_frame_thread_ = std::thread(
-        [this]() {         
+        [this, aps_width, aps_height]() {
             while (is_grab_image_thread_running_) {
-                FrameAndDrop new_frame_drop;
-                int ret = getNextFrame(new_frame_drop);
+
+                int drop_nums;
+                dvsense::ApsFrame rgb_frame(aps_width, aps_height);
+                int ret = getNextFrame(rgb_frame, drop_nums);
                 if (ret == 0) {
                     {
                         std::unique_lock<std::mutex> lock(frame_buffer_mutex_);
-                        for (int i = 0; i < new_frame_drop.drop_frame_num; i++) 
+                        for (int i = 0; i < drop_nums; i++)
                         {
-                            frames_buffer_.emplace(cv::Mat());
+                            frames_buffer_.emplace(dvsense::ApsFrame(0, 0));
                         }
-                        frames_buffer_.emplace(new_frame_drop.frame);
+                        frames_buffer_.emplace(rgb_frame);
                     }
                 }
                 else {
-                    std::cout << "when getNextFrame, ret is -1" << std::endl;
                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 }
             }
@@ -314,7 +315,7 @@ int HikCamera::destroyCamera() {
     return ret;
 }
 
-bool HikCamera::getNewRgbFrame(cv::Mat& output_frame) {
+bool HikCamera::getNewRgbFrame(dvsense::ApsFrame& output_frame) {
     if (frames_buffer_.empty())
     {
         return false;

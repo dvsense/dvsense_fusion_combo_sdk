@@ -13,5 +13,9 @@ target_link_libraries(FusionShow PRIVATE
     opencv_highgui
 )
 
+if(NOT EXISTS ${CMAKE_BINARY_DIR}/bin/output)
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/bin/output)
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

@@ -2,8 +2,10 @@
 
 #ifdef _WIN32
 #include <opencv2/core.hpp>
+#include <DvsenseDriver/camera/DvsCameraManager.hpp>
 #else 
 #include "opencv4/opencv2/core.hpp"
+#include <DvsenseDriver/camera/DvsCameraManager.hpp>
 #endif
 
 class RgbCamera {
@@ -26,7 +28,7 @@ public:
 
 	virtual int destroyCamera() = 0;
 
-	virtual bool getNewRgbFrame(cv::Mat& output_frame) = 0;
+	virtual bool getNewRgbFrame(dvsense::ApsFrame& output_frame) = 0;
 
 	template<typename RGBCameraType>
 	static std::unique_ptr<RgbCamera> create(float fps)
