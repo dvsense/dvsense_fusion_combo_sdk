@@ -11,7 +11,6 @@ DvsRgbFusionCamera<RGBCameraType>::DvsRgbFusionCamera(float aps_fps): aps_fps_(a
     ext_trigger_sync_running_ = false;
     save_frame_num_ = 0;
     aps_is_recording_ = false;
-    event_buffer_ = std::make_shared<dvsense::Event2DVector>();
     dvs_camera_ = std::make_shared<dvsense::DvsEventCamera>();
     rgb_camera_ = RgbCamera::create<RGBCameraType>(aps_fps_);
 }
@@ -65,6 +64,7 @@ bool DvsRgbFusionCamera<RGBCameraType>::openCamera(DvsRgbCameraSerial dvs_rgb_se
     }
     recording_frame_callback_id_ = addApsFrameCallback(
         [this](const dvsense::ApsFrame& rgb_frame) {
+            std::unique_lock<std::mutex> lock(recording_mutex_);
             if (aps_is_recording_) {
                 if (save_frame_num_ == 0)
                 {
@@ -77,13 +77,6 @@ bool DvsRgbFusionCamera<RGBCameraType>::openCamera(DvsRgbCameraSerial dvs_rgb_se
                 }
                 if (rgb_frame.getDataSize() != 0)
                 {
-                    //const uint8_t* sharedData = rgb_frame.data();
-                    //size_t dataSize = rgb_frame.getDataSize();
-                    //std::unique_lock<std::mutex> lock(aps_queue_mutex_);
-                    //aps_data_queue_.emplace(
-                    //    std::vector<uint8_t>(sharedData, sharedData + dataSize),
-                    //    rgb_frame.exposure_end_timestamp - aps_save_ts_offset_
-                    //);
                     aps_to_mp4_->rgbToVideo(rgb_frame.data(), rgb_frame.exposure_end_timestamp - aps_save_ts_offset_);       
                 }
                 save_frame_num_++;
@@ -94,25 +87,7 @@ bool DvsRgbFusionCamera<RGBCameraType>::openCamera(DvsRgbCameraSerial dvs_rgb_se
             }
         });
 
-    recording_running_ = false;
-    save_to_mp4_thread_ = std::thread(
-        [this]() {
-            while(recording_running_)
-            {
-                if (aps_is_recording_ && !aps_data_queue_.empty())
-                {
-                    std::unique_lock<std::mutex> lock(aps_queue_mutex_);
-                    ApsFrameTimeStamp out_aps_data = aps_data_queue_.front();
-                    aps_to_mp4_->rgbToVideo(out_aps_data.data.data(), out_aps_data.aps_time);
-                    aps_data_queue_.pop();
-                }
-                else
-                {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                }
-            }
-        }
-    );
+
 	return true;
 }
 
@@ -253,6 +228,7 @@ int DvsRgbFusionCamera<RGBCameraType>::startRecording(std::string output_dir) {
 
     dvs_camera_->startRecording(dvs_file_path);
     aps_to_mp4_->setOutputFile(aps_file_path);
+    std::unique_lock<std::mutex> lock(recording_mutex_);
     aps_is_recording_ = true;
     std::cout << "Start Recording, Saving to " << output_dir << std::endl;
     return 0;
@@ -263,6 +239,7 @@ int DvsRgbFusionCamera<RGBCameraType>::stopRecording() {
     std::cout << "Stop Recording." << std::endl;
     dvs_camera_->stopRecording();
 
+    std::unique_lock<std::mutex> lock(recording_mutex_);
     aps_is_recording_ = false;
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     aps_to_mp4_->flushAndCloseVideo();
@@ -366,8 +343,6 @@ int DvsRgbFusionCamera<RGBCameraType>::destroy()
     dvs_camera_.reset();
     int ret = rgb_camera_->destroyCamera();
     rgb_camera_.reset();
-    recording_running_ = false;
-    if (save_to_mp4_thread_.joinable()) save_to_mp4_thread_.join();
     return ret;
 }
 

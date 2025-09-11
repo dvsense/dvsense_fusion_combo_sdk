@@ -14,17 +14,6 @@ using json = nlohmann::json;
 #define DVSENSE_API
 #endif // _WIN32
 
-struct ApsFrameTimeStamp
-{
-	std::vector<uint8_t> data;
-	uint64_t aps_time;
-
-	ApsFrameTimeStamp() : aps_time(0) {}
-
-	ApsFrameTimeStamp(std::vector<uint8_t> data_vec, uint64_t time)
-		: data(std::move(data_vec)), aps_time(time) {}
-};
-
 struct DvsRgbCameraSerial
 {
 	dvsense::CameraDescription dvs_serial_number;
@@ -228,35 +217,24 @@ private:
 	std::unique_ptr<RgbCamera> rgb_camera_;
 
 	float aps_fps_;
-	std::mutex event_buffer_mutex_;
-	std::mutex frame_buffer_mutex_;
 
 	std::map<int, const FrameCallback> frame_callbacks_;
-
 	int frame_callback_id_num_;
 
-	std::shared_ptr<dvsense::Event2DVector> event_buffer_;
 
 	// ----- sync -----
 	uint32_t ext_trigger_sync_callback_id_;
 	uint32_t recording_frame_callback_id_;
 	std::atomic<bool> ext_trigger_sync_running_;
 
-	dvsense::CameraDescription camera_desc_;
-
 	std::shared_ptr<DataToVideo> aps_to_mp4_;
-	std::shared_ptr<DataToVideo> aps_decoder_;
+    std::mutex recording_mutex_;
 	bool aps_is_recording_;
 	dvsense::TimeStamp aps_save_ts_offset_;
 	uint64_t save_frame_num_;
 
 	json sync_json_;
 	std::ofstream json_file_;
-
-	std::queue<ApsFrameTimeStamp> aps_data_queue_;
-	std::mutex aps_queue_mutex_;
-	bool recording_running_;
-	std::thread save_to_mp4_thread_;	
 };
 
 template<typename RGBCameraType>
