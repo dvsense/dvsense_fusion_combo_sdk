@@ -149,7 +149,7 @@ endif()
 option(BUILD_DOCS "Build documentation" OFF)
 if(BUILD_DOCS)
     find_package(Doxygen REQUIRED)
-    set(DOXYGEN_IN ${CMAKE_CURRENT_LIST_DIR}/docs/Doxyfile.in)
+    set(DOXYGEN_IN ${CMAKE_CURRENT_LIST_DIR}/docs/Doxyfile_zh.in)
     set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
     configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
