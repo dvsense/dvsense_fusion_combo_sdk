@@ -39,6 +39,7 @@ set(CAMERA_MANAGER_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/dvs
 message(STATUS "CAMERA_MANAGER_INCLUDE_DIR: ${CAMERA_MANAGER_INCLUDE_DIR}")
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/calibration_result.json DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     # 设置Debug构建类型的编译选项
@@ -108,8 +109,7 @@ target_include_directories(DvsRgbFusionCamera
 target_link_libraries(DvsRgbFusionCamera 
 PUBLIC
     ${MVS_LIB}
-    ${OpenCV_LIBS}
-    ${Boost_LIBRARIES}
+    opencv_core
     DvsenseDriver::Driver
     ${AVCODEC_LIB}
     ${AVFORMAT_LIB}
@@ -132,7 +132,8 @@ PUBLIC
 
 target_link_libraries(DvsRgbCalib 
 PUBLIC
-    ${OpenCV_LIBS}
+    opencv_core
+    opencv_imgproc
 ) 
 
 # Provide a namespaced ALIAS
@@ -148,7 +149,7 @@ endif()
 option(BUILD_DOCS "Build documentation" OFF)
 if(BUILD_DOCS)
     find_package(Doxygen REQUIRED)
-    set(DOXYGEN_IN ${CMAKE_CURRENT_LIST_DIR}/docs/Doxyfile.in)
+    set(DOXYGEN_IN ${CMAKE_CURRENT_LIST_DIR}/docs/Doxyfile_zh.in)
     set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
     configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)

@@ -24,7 +24,7 @@
 */
 var NAVTREE =
 [
-  [ "“FUSIONCAMERA API”", "index.html", [
+  [ "DvsenseComboSDK", "index.html", [
     [ "类", "annotated.html", [
       [ "类列表", "annotated.html", "annotated_dup" ],
       [ "类索引", "classes.html", null ],
@@ -32,16 +32,13 @@ var NAVTREE =
         [ "全部", "functions.html", null ],
         [ "函数", "functions_func.html", null ]
       ] ]
-    ] ],
-    [ "文件", "files.html", [
-      [ "文件列表", "files.html", "files_dup" ]
     ] ]
   ] ]
 ];
 
 var NAVTREEINDEX =
 [
-"_dvs_rgb_fusion_camera_8hpp_source.html"
+"annotated.html"
 ];
 
 var SYNCONMSG = '点击 关闭 面板同步';

@@ -1,5 +1,6 @@
 #include "DvsRgbFusionCamera/CameraManager/DvsRgbFusionCamera.hpp"
 #include "DvsRgbCalib/CalibrateThroughFile.hpp"
+#include "DvsRgbFusionCamera/rgb/hik/HikCamera.hpp"
 
 // purple - magenta
 cv::Vec3b color_bg = cv::Vec3b(0x00, 0x00, 0x00);
@@ -14,7 +15,7 @@ cv::Vec3b color_off = cv::Vec3b(0x00, 0xff, 0x00);
 
 int main(int argc, char* argv[])
 {
-	std::string data_save_path = "./data";
+	std::string data_save_path = "./output";
 	if (argc < 2) {
 		std::cout << "Usage: " << argv[0] << " <data_save_path>" << std::endl;
 	}
@@ -24,13 +25,13 @@ int main(int argc, char* argv[])
 
 	bool is_calibration_active = true;
 
-	std::unique_ptr<CalibrateThroughFile> calibrator = std::make_unique<CalibrateThroughFile>("D:/FusionCamera/dvsense_fusion_combo_sdk/calibration_result.json");
+	std::unique_ptr<CalibrateThroughFile> calibrator = std::make_unique<CalibrateThroughFile>("./calibration_result.json");
 	cv::Mat H = calibrator->getApsToDvsHomographyMatrix(600);
 
 	std::queue<cv::Mat> image_display_queue;
 	std::mutex display_image_mutex;
 
-	std::unique_ptr<DvsRgbFusionCamera> fusionCamera = std::make_unique<DvsRgbFusionCamera>(60);
+	std::unique_ptr<DvsRgbFusionCamera<HikCamera>> fusionCamera = std::make_unique<DvsRgbFusionCamera<HikCamera>>(45);
 
 	std::vector<dvsense::CameraDescription> dvs_serials;
 	std::vector<std::string> rgb_serials;
@@ -56,6 +57,9 @@ int main(int argc, char* argv[])
 
 	uint16_t dvs_width = fusionCamera->getWidth(dvsense::DVS_STREAM);
 	uint16_t dvs_height = fusionCamera->getHeight(dvsense::DVS_STREAM);
+	std::shared_ptr<dvsense::CameraTool> bias = fusionCamera->getTool(dvsense::ToolType::TOOL_BIAS);
+	bias->setParam("bias_diff_on", 18);
+	bias->setParam("bias_diff_off", 24);
 
 	cv::Mat display;
 	std::mutex dvs_frame_mutex;

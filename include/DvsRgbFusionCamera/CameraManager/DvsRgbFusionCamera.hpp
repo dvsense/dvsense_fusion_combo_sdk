@@ -1,10 +1,6 @@
 #pragma once
 
-#include "opencv2/opencv.hpp"
-#include "opencv2/core.hpp"
-#include "opencv2/imgproc.hpp"
-#include "opencv2/videoio.hpp"
-
+#include <queue>
 #include "DvsRgbFusionCamera/dvs/DvsEventCamera.hpp"
 #include "DvsRgbFusionCamera/rgb/RgbCamera.hpp"
 #include "DvsRgbFusionCamera/CameraManager/DataToVideo.hpp"
@@ -26,6 +22,7 @@ struct DvsRgbCameraSerial
 
 using FrameCallback = std::function<void(dvsense::ApsFrame&)>;
 
+template<typename RGBCameraType>
 class DVSENSE_API DvsRgbFusionCamera
 {
 public:
@@ -213,39 +210,32 @@ public:
 	int destroy();
 
 private:
+    void extTriggerSyncCallback();
+    std::string getCurrentTime();
+
 	std::shared_ptr<dvsense::DvsEventCamera> dvs_camera_;
 	std::unique_ptr<RgbCamera> rgb_camera_;
 
 	float aps_fps_;
-	std::mutex event_buffer_mutex_;
-	std::mutex frame_buffer_mutex_;
 
 	std::map<int, const FrameCallback> frame_callbacks_;
+	int frame_callback_id_num_;
 
-	int frame_callback_id_num_ = 0;
-
-	std::shared_ptr<dvsense::Event2DVector> event_buffer_;
-
-	std::string getCurrentTime();
 
 	// ----- sync -----
-	void extTriggerSyncCallback();
-	uint32_t ext_trigger_sync_callback_id_ = 0;
-	uint32_t recording_frame_callback_id_ = 0;
-	std::atomic<bool> ext_trigger_sync_running_ = false;
-
-	dvsense::CameraDescription camera_desc_;
+	uint32_t ext_trigger_sync_callback_id_;
+	uint32_t recording_frame_callback_id_;
+	std::atomic<bool> ext_trigger_sync_running_;
 
 	std::shared_ptr<DataToVideo> aps_to_mp4_;
-	std::shared_ptr<DataToVideo> aps_decoder_;
-	bool aps_is_recording_ = false;
+    std::mutex recording_mutex_;
+	bool aps_is_recording_;
 	dvsense::TimeStamp aps_save_ts_offset_;
-	uint64_t save_frame_num_ = 0;
+	uint64_t save_frame_num_;
 
 	json sync_json_;
 	std::ofstream json_file_;
-
 };
 
-
-typedef DVSENSE_API std::shared_ptr<DvsRgbFusionCamera> DvsRgbCameraDevice;
+template<typename RGBCameraType>
+using DvsRgbCameraDevice = std::shared_ptr<DvsRgbFusionCamera<RGBCameraType>>;
