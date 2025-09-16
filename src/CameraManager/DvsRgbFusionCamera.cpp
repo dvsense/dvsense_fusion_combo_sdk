@@ -255,7 +255,7 @@ void DvsRgbFusionCamera<RGBCameraType>::extTriggerSyncCallback()
     ext_trigger_sync_callback_id_ = dvs_camera_->addTriggerInCallback(
         [this](const dvsense::EventTriggerIn& begin) {          
             static uint64_t rise_trigger_timestamp = 0;
-            if (begin.polarity == 1) 
+            if (begin.polarity == 0) 
             {
                 rise_trigger_timestamp = begin.timestamp;
                 return;            

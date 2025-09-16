@@ -138,10 +138,6 @@ bool HikCamera::openCamera(std::string serial_number) {
     if (ret != MV_OK) {
         std::cout << "LineMode fail! ret = " << ret << std::endl;
     }
-    ret = MV_CC_SetBoolValue(aps_camera_handle_, "LineInverter", true);
-    if (ret != MV_OK) {
-        std::cout << "SetEnumValueByString fail! ret = " << ret << std::endl;
-    }
     
     ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "LineSource", "ExposureStartActive");
     if (ret != MV_OK) {
@@ -214,7 +210,6 @@ int HikCamera::getNextFrame(dvsense::ApsFrame& rgb_frame, int& drop_frame_num) {
     else
     {
         unsigned long long current_frame_id = frame_out_.stFrameInfo.nFrameNum;
-        //std::cout << "currentFrameID: " << current_frame_id << std::endl;
         drop_frame_num = current_frame_id - last_frame_id_ - 1;
         if (drop_frame_num > 0)
         {
@@ -235,19 +230,41 @@ int HikCamera::getNextFrame(dvsense::ApsFrame& rgb_frame, int& drop_frame_num) {
 }
 
 int HikCamera::startCamera() {
+    //MV_CC_SetBoolValue(aps_camera_handle_, "LineInverter", false);
     last_frame_id_ = -1;
     frames_buffer_ = std::queue<dvsense::ApsFrame>();
+    int aps_width = getWidth();
+    int aps_height = getHeight();
+    //‘§»»
+    for (int i = 0; i < 3; i++) 
+    {
+        frames_buffer_.emplace(dvsense::ApsFrame(0, 0));
+    }
     int ret = MV_CC_StartGrabbing(aps_camera_handle_);
     if (ret != MV_OK) {
         std::cout << "MV_CC_StartGrabbing fail! ret = " << ret << std::endl;
         return -1;
     }
-    
-
-    int aps_width = getWidth();
-    int aps_height = getHeight();
     is_grab_image_thread_running_ = true;
+    while (is_grab_image_thread_running_)
+    {
+        int drop_nums;
+        dvsense::ApsFrame rgb_frame(aps_width, aps_height);
+        int ret = getNextFrame(rgb_frame, drop_nums);
+        if (ret == 0)
+        {
+            int ret = MV_CC_StopGrabbing(aps_camera_handle_);
+            break;
+        }
+        else {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    frames_buffer_ = std::queue<dvsense::ApsFrame>();
 
+    ret = MV_CC_StartGrabbing(aps_camera_handle_);
+    is_grab_image_thread_running_ = true;
     grab_frame_thread_ = std::thread(
         [this, aps_width, aps_height]() {
             while (is_grab_image_thread_running_) {
