@@ -144,6 +144,7 @@ option(BUILD_SAMPLES "Build samples" OFF)
 if (BUILD_SAMPLES)
     add_subdirectory(samples/FusionShow)
     add_subdirectory(samples/FileReader)
+    add_subdirectory(samples/FileCut)
 endif()
 
 option(BUILD_DOCS "Build documentation" OFF)

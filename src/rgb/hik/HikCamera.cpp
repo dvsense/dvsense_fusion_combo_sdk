@@ -135,9 +135,6 @@ bool HikCamera::openCamera(std::string serial_number) {
     }
 
     ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "LineMode", "Strobe");
-    if (ret != MV_OK) {
-        std::cout << "LineMode fail! ret = " << ret << std::endl;
-    }
     
     ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "LineSource", "ExposureStartActive");
     if (ret != MV_OK) {
@@ -264,7 +261,6 @@ int HikCamera::startCamera() {
     frames_buffer_ = std::queue<dvsense::ApsFrame>();
 
     ret = MV_CC_StartGrabbing(aps_camera_handle_);
-    is_grab_image_thread_running_ = true;
     grab_frame_thread_ = std::thread(
         [this, aps_width, aps_height]() {
             while (is_grab_image_thread_running_) {
@@ -327,6 +323,7 @@ int HikCamera::destroyCamera() {
 }
 
 bool HikCamera::getNewRgbFrame(dvsense::ApsFrame& output_frame) {
+    std::unique_lock<std::mutex> lock(frame_buffer_mutex_);
     if (frames_buffer_.empty())
     {
         return false;
