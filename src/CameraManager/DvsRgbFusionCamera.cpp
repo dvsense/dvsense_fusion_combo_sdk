@@ -213,13 +213,11 @@ int DvsRgbFusionCamera<RGBCameraType>::startRecording(std::string output_dir) {
         json_path = output_dir + "/fusion-" + current_time + ".json";
     }
 
-    std::cout << "json_path" << json_path << std::endl;
     json_file_.open(json_path);
     if (!json_file_.is_open()) {
         std::cerr << "Fatal Error: Failed to open JSON file: " << json_path << std::endl;
         std::exit(EXIT_FAILURE);
-    }
-
+    }                                                                                                                                                                                                                            
 
     std::string dvs_file_path = output_dir + "/fusion-" + current_time + ".raw";
     std::string aps_file_path = output_dir + "/fusion-" + current_time + ".mp4";
@@ -344,6 +342,17 @@ int DvsRgbFusionCamera<RGBCameraType>::destroy()
     int ret = rgb_camera_->destroyCamera();
     rgb_camera_.reset();
     return ret;
+}
+
+template<typename RGBCameraType>
+int DvsRgbFusionCamera<RGBCameraType>::openApsExternalTrigger()
+{
+    bool ret = rgb_camera_->openExternalTrigger();
+    if (!ret)
+    {
+        return false;
+    }
+    return true;
 }
 
 template class DvsRgbFusionCamera<HikCamera>;

@@ -32,6 +32,8 @@ public:
 
     int destroyCamera() override;
 
+    bool openExternalTrigger() override;
+
 private:
     void bufferToMat(dvsense::ApsFrame& rgb_frame);
     int getNextFrame(dvsense::ApsFrame& rgb_frame, int& drop_frame_num);

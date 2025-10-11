@@ -146,9 +146,66 @@ bool HikCamera::openCamera(std::string serial_number) {
         std::cout << "MV_CC_SetEnable fail! ret = " << ret << std::endl;
     }
 
-    // Here setting the width is for better compatibility when using ffmpeg which could not handle the width that is not divisible by 16 in some cases.
-    int64_t set_width = int(getWidth() / 16) * 16;
+    // Here setting the width is for better compatibility when using ffmpeg which could not handle the width that is not divisible by 4 in some cases.
+    int64_t set_width = int(getWidth() / 4) * 4;
     MV_CC_SetIntValueEx(aps_camera_handle_, "Width", set_width);
+
+    return true;
+}
+
+bool HikCamera::openExternalTrigger()
+{
+    // 设置采集模式  0：单帧  2：连续
+    bool ret = MV_CC_SetEnumValue(aps_camera_handle_, "AcquisitionMode", 2);
+    //设置触发源  0：线路0
+    ret = MV_CC_SetEnumValue(aps_camera_handle_, "TriggerSource", 0);
+    //设置触发模式  0：关闭  1：打开
+    ret = MV_CC_SetEnumValue(aps_camera_handle_, "TriggerMode", 1);
+    //设置采集开始
+    ret = MV_CC_SetCommandValue(aps_camera_handle_, "AcquisitionStart");
+
+    //Set HB mode to off
+    ret = MV_CC_SetEnumValue(aps_camera_handle_, "ImageCompressionMode", 0);
+    // set frame rate
+    ret = MV_CC_SetFloatValue(aps_camera_handle_, "AcquisitionFrameRate", fps_);
+    std::cout << "Aps frame fps is: " << fps_ << std::endl;
+    if (ret != MV_OK) {
+        std::cout << "Frame rate set failed fail! ret = " << ret << std::endl;
+        return -1;
+    }
+
+    ret = MV_CC_SetBoolValue(aps_camera_handle_, "AcquisitionFrameRateEnable", true);
+    if (ret != MV_OK) {
+        std::cout << "Frame rate enable fail! ret = " << ret << std::endl;
+        return -1;
+    }
+    // flip X
+    //ret = MV_CC_SetBoolValue(aps_camera_handle_, "ReverseX", true);
+
+    //Auto Exposure
+    ret = MV_CC_SetIntValue(aps_camera_handle_, "AutoExposureTimeUpperLimit", 20000);
+    ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "ExposureAuto", "Continuous");
+
+    //// Gain
+    ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "GainAuto", "Continuous");
+
+    //// Trigger settings
+    ret = MV_CC_SetEnumValue(aps_camera_handle_, "LineSelector", 1);
+    if (ret != MV_OK) {
+        std::cout << "MV_CC_SetEnumValue LineSelector fail! ret = " << ret << std::endl;
+    }
+
+    ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "LineMode", "Strobe");
+
+    ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "LineSource", "ExposureStartActive");
+    if (ret != MV_OK) {
+        std::cout << "MV_CC_SetEnumValue LineSource fail! ret = " << ret << std::endl;
+    }
+
+    ret = MV_CC_SetBoolValue(aps_camera_handle_, "StrobeEnable", true);
+    if (ret != MV_OK) {
+        std::cout << "MV_CC_SetEnable fail! ret = " << ret << std::endl;
+    }
 
     return true;
 }
@@ -200,7 +257,6 @@ void HikCamera::bufferToMat(
 int HikCamera::getNextFrame(dvsense::ApsFrame& rgb_frame, int& drop_frame_num) {
     int ret = MV_CC_GetImageBuffer(aps_camera_handle_, &frame_out_, 1000);
     if (ret != MV_OK) {
-        std::cout << "MV_CC_GetOneFrameTimeout fail! ret = " << std::to_string(ret) << std::endl;
         rgb_frame = dvsense::ApsFrame(0, 0);//size
         return -1;
     }
@@ -237,30 +293,37 @@ int HikCamera::startCamera() {
     {
         frames_buffer_.emplace(dvsense::ApsFrame(0, 0));
     }
-    int ret = MV_CC_StartGrabbing(aps_camera_handle_);
-    if (ret != MV_OK) {
-        std::cout << "MV_CC_StartGrabbing fail! ret = " << ret << std::endl;
-        return -1;
-    }
+
     is_grab_image_thread_running_ = true;
-    while (is_grab_image_thread_running_)
+    MVCC_ENUMVALUE stEnumValue = { 0 };
+    MV_CC_GetEnumValue(aps_camera_handle_, "TriggerMode", &stEnumValue);
+    if (stEnumValue.nCurValue == 0)
     {
-        int drop_nums;
-        dvsense::ApsFrame rgb_frame(aps_width, aps_height);
-        int ret = getNextFrame(rgb_frame, drop_nums);
-        if (ret == 0)
+        bool ret = MV_CC_StartGrabbing(aps_camera_handle_);
+        if (ret != MV_OK) {
+            std::cout << "MV_CC_StartGrabbing fail! ret = " << ret << std::endl;
+            return -1;
+        }
+        while (is_grab_image_thread_running_)
         {
-            int ret = MV_CC_StopGrabbing(aps_camera_handle_);
-            break;
+            int drop_nums;
+            dvsense::ApsFrame rgb_frame(aps_width, aps_height);
+            int ret = getNextFrame(rgb_frame, drop_nums);
+            if (ret == 0)
+            {
+                int ret = MV_CC_StopGrabbing(aps_camera_handle_);
+                break;
+            }
+            else {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
         }
-        else {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
     frames_buffer_ = std::queue<dvsense::ApsFrame>();
 
-    ret = MV_CC_StartGrabbing(aps_camera_handle_);
+    bool ret = MV_CC_StartGrabbing(aps_camera_handle_);
     grab_frame_thread_ = std::thread(
         [this, aps_width, aps_height]() {
             while (is_grab_image_thread_running_) {

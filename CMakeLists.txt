@@ -145,6 +145,7 @@ if (BUILD_SAMPLES)
     add_subdirectory(samples/FusionShow)
     add_subdirectory(samples/FileReader)
     add_subdirectory(samples/FileCut)
+    add_subdirectory(samples/ExternalTriggerShow)
 endif()
 
 option(BUILD_DOCS "Build documentation" OFF)

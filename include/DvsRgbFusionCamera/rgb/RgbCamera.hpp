@@ -25,6 +25,8 @@ public:
 
 	virtual bool getNewRgbFrame(dvsense::ApsFrame& output_frame) = 0;
 
+	virtual bool openExternalTrigger() = 0;
+
 	template<typename RGBCameraType>
 	static std::unique_ptr<RgbCamera> create(float fps)
 	{

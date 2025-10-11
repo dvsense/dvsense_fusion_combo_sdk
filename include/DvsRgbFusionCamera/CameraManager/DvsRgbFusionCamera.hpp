@@ -207,6 +207,14 @@ public:
 	 */
 	const std::shared_ptr<dvsense::CameraTool> getTool(dvsense::ToolType type);
 
+	/**
+	 * \~english @brief Open the RGB camera external trigger
+	 * \~english @return int 0 if success, otherwise return error code
+	 * \~chinese @brief ͣ开启RGB相机的外部触发
+	 * \~chinese @return int 如果成功开启则返回0，否则返回错误代码
+	 */
+	int openApsExternalTrigger();
+
 	int destroy();
 
 private:
