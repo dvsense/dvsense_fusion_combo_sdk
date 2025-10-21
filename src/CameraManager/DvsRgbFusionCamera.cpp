@@ -184,13 +184,13 @@ bool DvsRgbFusionCamera<RGBCameraType>::removeEventsStreamHandleCallback(uint32_
 }
 
 template<typename RGBCameraType>
-uint32_t DvsRgbFusionCamera<RGBCameraType>::addTriggerInCallback(const NewTriggerInCallback& newTriggerInCallback)
+uint32_t DvsRgbFusionCamera<RGBCameraType>::addSyncSignalCallback(const NewTriggerInCallback& newTriggerInCallback)
 {
     return dvs_camera_->addTriggerInCallback(newTriggerInCallback);
 }
 
 template<typename RGBCameraType>
-bool DvsRgbFusionCamera<RGBCameraType>::removeTriggerInCallback(uint32_t callback_id)
+bool DvsRgbFusionCamera<RGBCameraType>::removeSyncSignalCallback(uint32_t callback_id)
 {
     return dvs_camera_->removeTriggerInCallback(callback_id);
 }

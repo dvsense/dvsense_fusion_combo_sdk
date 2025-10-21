@@ -122,7 +122,8 @@ bool HikCamera::openCamera(std::string serial_number) {
     //ret = MV_CC_SetBoolValue(aps_camera_handle_, "ReverseX", true);
 
     //Auto Exposure
-    ret = MV_CC_SetIntValue(aps_camera_handle_, "AutoExposureTimeUpperLimit", 20000);
+    int auto_exposure_time = 1000000 / fps_;
+    ret = MV_CC_SetIntValue(aps_camera_handle_, "AutoExposureTimeUpperLimit", auto_exposure_time);
     ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "ExposureAuto", "Continuous");
 
     //// Gain
@@ -155,13 +156,9 @@ bool HikCamera::openCamera(std::string serial_number) {
 
 bool HikCamera::openExternalTrigger()
 {
-    // 设置采集模式  0：单帧  2：连续
     bool ret = MV_CC_SetEnumValue(aps_camera_handle_, "AcquisitionMode", 2);
-    //设置触发源  0：线路0
     ret = MV_CC_SetEnumValue(aps_camera_handle_, "TriggerSource", 0);
-    //设置触发模式  0：关闭  1：打开
     ret = MV_CC_SetEnumValue(aps_camera_handle_, "TriggerMode", 1);
-    //设置采集开始
     ret = MV_CC_SetCommandValue(aps_camera_handle_, "AcquisitionStart");
 
     //Set HB mode to off
@@ -179,12 +176,6 @@ bool HikCamera::openExternalTrigger()
         std::cout << "Frame rate enable fail! ret = " << ret << std::endl;
         return -1;
     }
-    // flip X
-    //ret = MV_CC_SetBoolValue(aps_camera_handle_, "ReverseX", true);
-
-    //Auto Exposure
-    ret = MV_CC_SetIntValue(aps_camera_handle_, "AutoExposureTimeUpperLimit", 20000);
-    ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "ExposureAuto", "Continuous");
 
     //// Gain
     ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "GainAuto", "Continuous");
@@ -288,7 +279,7 @@ int HikCamera::startCamera() {
     frames_buffer_ = std::queue<dvsense::ApsFrame>();
     int aps_width = getWidth();
     int aps_height = getHeight();
-    //预热
+    //预锟斤拷
     for (int i = 0; i < 3; i++) 
     {
         frames_buffer_.emplace(dvsense::ApsFrame(0, 0));
