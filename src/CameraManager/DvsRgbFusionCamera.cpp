@@ -131,6 +131,30 @@ int DvsRgbFusionCamera<RGBCameraType>::start(dvsense::STREAM_TYPE type)
         dvs_camera_->startCamera();
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         ext_trigger_sync_running_ = true;
+
+        std::shared_ptr<dvsense::CameraTool> hal_sync = dvs_camera_->getTool(dvsense::ToolType::TOOL_SYNC);
+        std::string sync_type;
+        hal_sync->getParam("mode", sync_type);
+        if (sync_type == "SLAVE")
+        {
+            bool master_opening = false;
+            uint32_t event_id = dvs_camera_->registerEventCallback(
+                [&master_opening](const dvsense::EventIterator_t begin, const dvsense::EventIterator_t end) {
+                    for (auto it = begin; it != end; ++it) {
+                        master_opening = true;
+                    }
+                }
+            );
+            while (!master_opening) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
+            bool ret = dvs_camera_->removeEventCallback(event_id);
+            if (!ret)
+            {
+                std::cout << "remove event callback failed!" << std::endl;
+                return -1;
+            }
+        }
         rgb_camera_->startCamera();
         return 0;
     }

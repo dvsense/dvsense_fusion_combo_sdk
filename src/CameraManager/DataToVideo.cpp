@@ -103,7 +103,7 @@
 		codec_ctx_->framerate = {framerate_, 1};
 		codec_ctx_->gop_size = 1;
 		codec_ctx_->keyint_min = 1;
-		codec_ctx_->bit_rate = 60000000;
+		codec_ctx_->bit_rate = 10000000;
 
 		if (avcodec_open2(codec_ctx_, av_codec_, nullptr) < 0)
 		{

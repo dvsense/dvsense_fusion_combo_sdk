@@ -8,6 +8,13 @@
 #include "DvsenseBase/logging/logger.hh"
 #include "DvsRgbCalib/CalibrateThroughFile.hpp"
 
+#include <iomanip>
+std::string format_id(int id, int width = 5) {
+	std::stringstream ss;
+	ss << std::setw(width) << std::setfill('0') << id;
+	return ss.str();
+}
+
 using json = nlohmann::json;
 
 class EventAnalyzer {
@@ -54,7 +61,7 @@ public:
 };
 
 int main() {
-	std::ifstream file("D:/FusionCamera/dvsense_fusion_combo_sdk/out/build/x64-Release/bin/data/fusion-2025-08-19_18_00_46.json");
+	std::ifstream file("D:/FusionCamera/dvsense_fusion_combo_sdk/out/build/x64-Release/bin/output/fusion-2025-10-21_07_48_41.json");
 	json data = json::parse(file);
 
 	std::string event_file_path = data["dvs_file_path"];
@@ -78,8 +85,8 @@ int main() {
 
 	bool is_calibrator = true;
 
-	std::unique_ptr<CalibrateThroughFile> calibrator = std::make_unique<CalibrateThroughFile>("D:/FusionCamera/dvsense_fusion_combo_sdk/calibration_result.json");
-	cv::Mat H = calibrator->getApsToDvsHomographyMatrix(600);
+	std::unique_ptr<CalibrateThroughFile> calibrator = std::make_unique<CalibrateThroughFile>("./calibration_result.json");
+	cv::Mat H = calibrator->getApsToDvsHomographyMatrix(1000);
 
 	EventAnalyzer event_analyzer;
 	int dvs_width = reader->getWidth();
@@ -97,9 +104,12 @@ int main() {
 	cv::Mat new_dvs_frame;
 	cv::Mat new_aps_frame;
 	cv::Mat frame;
+	int save_img_id = 0;
 	while (cap.read(frame)) {
 		dvsense::TimeStamp pts = cap.get(cv::CAP_PROP_POS_MSEC) * 1000;
 		dvsense::TimeStamp current_ts = pts + offset_timestamp;
+
+		std::cout << current_ts << std::endl;
 
 		std::shared_ptr<dvsense::Event2DVector> events = reader->getNTimeEventsGivenStartTimeStamp(current_ts - event_analyzer_time * 1000, event_analyzer_time * 1000);
 		event_analyzer.process_events(events->data(), events->data() + events->size());
@@ -120,6 +130,8 @@ int main() {
 		else
 		{
 			cv::Mat img_warped = calibrator->warpImage(frame, H, cv::Size(dvs_width, dvs_height));
+			cv::imwrite("D:/project-py/RAW2H5/datas4/images/" + format_id(save_img_id) + ".png", img_warped);
+			save_img_id++;
 			img_warped.setTo(cv::Scalar(0, 0, 0), new_dvs_frame);
 			new_aps_frame = img_warped + new_dvs_frame;
 		}

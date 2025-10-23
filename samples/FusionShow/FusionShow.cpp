@@ -26,12 +26,12 @@ int main(int argc, char* argv[])
 	bool is_calibration_active = true;
 
 	std::unique_ptr<CalibrateThroughFile> calibrator = std::make_unique<CalibrateThroughFile>("./calibration_result.json");
-	cv::Mat H = calibrator->getApsToDvsHomographyMatrix(600);
+	cv::Mat H = calibrator->getApsToDvsHomographyMatrix(1000);
 
 	std::queue<cv::Mat> image_display_queue;
 	std::mutex display_image_mutex;
 
-	std::unique_ptr<DvsRgbFusionCamera<HikCamera>> fusionCamera = std::make_unique<DvsRgbFusionCamera<HikCamera>>(45);
+	std::unique_ptr<DvsRgbFusionCamera<HikCamera>> fusionCamera = std::make_unique<DvsRgbFusionCamera<HikCamera>>(30);
 
 	std::vector<dvsense::CameraDescription> dvs_serials;
 	std::vector<std::string> rgb_serials;
@@ -60,6 +60,8 @@ int main(int argc, char* argv[])
 	std::shared_ptr<dvsense::CameraTool> bias = fusionCamera->getTool(dvsense::ToolType::TOOL_BIAS);
 	bias->setParam("bias_diff_on", 18);
 	bias->setParam("bias_diff_off", 24);
+	std::shared_ptr<dvsense::CameraTool> hal_sync = fusionCamera->getTool(dvsense::ToolType::TOOL_SYNC);
+	hal_sync->setParam("mode", std::string("SLAVE"));           //  MASTER   SLAVE
 
 	cv::Mat display;
 	std::mutex dvs_frame_mutex;
