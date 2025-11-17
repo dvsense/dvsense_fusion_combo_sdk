@@ -18,6 +18,18 @@ if(NOT MVS_LIB)
     message(FATAL_ERROR "MvCameraControl library not found")
 endif()
 
+set(FOUND_DAHENG_LIB OFF)
+if(WIN32)
+else()
+    set(DAHENG_LIB_SEARCH_PATHS /usr/local/Galaxy_camera/lib/x86_64/ CACHE PATH "Daheng camera lib dir")
+    set(DAHENG_INCLUDE_DIR /usr/local/Galaxy_camera/inc/ CACHE PATH "Daheng camera include dir")
+    find_library(DAHENG_LIB NAMES gxiapi PATHS ${DAHENG_LIB_SEARCH_PATHS})
+    if(DAHENG_LIB)
+        set(FOUND_DAHENG_LIB ON)
+    endif()
+endif()
+
+
 set(CALIB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -116,6 +128,22 @@ PUBLIC
     ${AVUTIL_LIB}
     ${SWSCALE_LIB}
 )
+
+if(FOUND_DAHENG_LIB)
+    target_sources(DvsRgbFusionCamera PRIVATE "src/rgb/daheng/DahengCamera.cpp")
+    target_include_directories(DvsRgbFusionCamera
+    PUBLIC
+        $<BUILD_INTERFACE:${DAHENG_INCLUDE_DIR}>
+    )
+    target_link_libraries(DvsRgbFusionCamera 
+    PUBLIC
+        ${DAHENG_LIB}
+    )
+    target_compile_definitions(DvsRgbFusionCamera PRIVATE USE_DAHENG_CAMERA)
+    message(STATUS "Daheng camera library found and linked.")
+else()
+    message(STATUS "Daheng camera library not found. Skipping Daheng camera support.")
+endif()
 
 # Provide a namespaced ALIAS for in-tree consumers matching the exported name
 add_library(DvsRgbFusionCamera::DvsRgbFusionCamera ALIAS DvsRgbFusionCamera)
