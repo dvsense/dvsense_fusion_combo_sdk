@@ -20,15 +20,45 @@ endif()
 
 set(FOUND_DAHENG_LIB OFF)
 if(WIN32)
-    # On Windows provide explicit SDK paths (find_library may fail); use forward slashes and CACHE the values
-    set(DAHENG_LIB "C:/Program Files/Daheng Imaging/GalaxySDK/Development/C++ SDK/lib/x64/GxIAPICPPEx.lib" CACHE FILEPATH "Daheng camera library file")
-    set(DAHENG_INCLUDE_DIR "C:/Program Files/Daheng Imaging/GalaxySDK/Development/C++ SDK/inc" CACHE PATH "Daheng camera include dir")
+    set(DAHENG_LIBS "")
+    set(DAHENG_INCLUDE_DIR "C:/Program Files/Daheng Imaging/GalaxySDK/Development/VC SDK/inc" CACHE PATH "Daheng camera include dir")
 
-    if(EXISTS "${DAHENG_LIB}")
+    # On Windows provide explicit SDK paths (find_library may fail); use forward slashes and CACHE the values
+    find_library(DAHENG_GXIAPI_LIB
+        NAMES GxIAPI
+        PATHS
+            "C:/Program Files/Daheng Imaging/GalaxySDK/Development/VC SDK/lib/x64"
+    )
+    if(DAHENG_GXIAPI_LIB)
+        list(APPEND DAHENG_LIBS "${DAHENG_GXIAPI_LIB}")
+        message(STATUS "Found Daheng GxIAPI: ${DAHENG_GXIAPI_LIB}")
         set(FOUND_DAHENG_LIB ON)
-        message(STATUS "Daheng camera library found at ${DAHENG_LIB}")
     else()
-        message(STATUS "Daheng camera library not found at ${DAHENG_LIB}")
+        message(WARNING "Daheng GxIAPI.lib not found")
+        set(FOUND_DAHENG_LIB OFF)
+    endif()
+
+    find_library(DAHENG_DXIMAGEPROC_LIB
+        NAMES DxImageProc
+        PATHS
+            "C:/Program Files/Daheng Imaging/GalaxySDK/Development/VC SDK/lib/x64"
+    )
+    if(DAHENG_DXIMAGEPROC_LIB)
+        list(APPEND DAHENG_LIBS "${DAHENG_DXIMAGEPROC_LIB}")
+        message(STATUS "Found Daheng DxImageProc: ${DAHENG_DXIMAGEPROC_LIB}")
+        set(FOUND_DAHENG_LIB ON)
+    else()
+        message(WARNING "Daheng DxImageProc.lib not found")
+        set(FOUND_DAHENG_LIB OFF)
+    endif()
+
+    if(FOUND_DAHENG_LIB)
+        message(STATUS "Daheng include directories: ${DAHENG_INCLUDE_DIR}")
+        include_directories(${DAHENG_INCLUDE_DIR})
+        include_directories("C:/Program Files/Daheng Imaging/GalaxySDK/Development/VC SDK/inc")
+        message(STATUS "Daheng camera library found at ${DAHENG_LIBS}")
+    else()
+        message(STATUS "Daheng camera library not found at ${DAHENG_LIBS}")
     endif()
 else()
     set(DAHENG_LIB_SEARCH_PATHS /usr/local/Galaxy_camera/lib/x86_64/ CACHE PATH "Daheng camera lib dir")
@@ -144,11 +174,11 @@ if(FOUND_DAHENG_LIB)
     target_sources(DvsRgbFusionCamera PRIVATE "src/rgb/daheng/DahengCamera.cpp")
     target_include_directories(DvsRgbFusionCamera
     PUBLIC
-        $<BUILD_INTERFACE:${DAHENG_INCLUDE_DIR}>
+        ${DAHENG_INCLUDE_DIR}
     )
     target_link_libraries(DvsRgbFusionCamera 
     PUBLIC
-        ${DAHENG_LIB}
+        ${DAHENG_LIBS}
     )
     target_compile_definitions(DvsRgbFusionCamera PRIVATE USE_DAHENG_CAMERA)
     message(STATUS "Daheng camera library found and linked.")

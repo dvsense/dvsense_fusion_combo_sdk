@@ -323,7 +323,11 @@ int DahengCamera::startCamera() {
     }
 
     // 开流
+#ifdef _WIN32
+    GX_STATUS st = GXSetCommandValue(device_handle_, "AcquisitionStart");
+#else
     GX_STATUS st = GXStreamOn(device_handle_);
+#endif
     if (st != GX_STATUS_SUCCESS) {
         std::cout << "GXStreamOn fail, status = " << st << std::endl;
         return -1;
@@ -369,7 +373,11 @@ void DahengCamera::stopCamera() {
     if (grab_frame_thread_.joinable()) grab_frame_thread_.join();
 
     if (device_handle_) {
+#ifdef _WIN32
+        GX_STATUS st = GXSetCommandValue(device_handle_, "AcquisitionStop");
+#else
         GX_STATUS st = GXStreamOff(device_handle_);
+#endif
         if (st != GX_STATUS_SUCCESS) {
             std::cout << "GXStreamOff failed, status = " << st << std::endl;
         }

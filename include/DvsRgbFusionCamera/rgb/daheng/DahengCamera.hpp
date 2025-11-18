@@ -6,14 +6,9 @@
 #include <mutex>
 #include <thread>
 
-
-#ifdef _WIN32
-#include "GalaxyIncludes.h"
-#else
 #include "GxIAPI.h"
-#endif
-
 #include "DxImageProc.h"
+
 #include "DvsRgbFusionCamera/rgb/RgbCamera.hpp"
 
 class DahengCamera : public RgbCamera 
