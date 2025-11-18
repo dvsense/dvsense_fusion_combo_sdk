@@ -20,12 +20,23 @@ endif()
 
 set(FOUND_DAHENG_LIB OFF)
 if(WIN32)
+    # On Windows provide explicit SDK paths (find_library may fail); use forward slashes and CACHE the values
+    set(DAHENG_LIB "C:/Program Files/Daheng Imaging/GalaxySDK/Development/C++ SDK/lib/x64/GxIAPICPPEx.lib" CACHE FILEPATH "Daheng camera library file")
+    set(DAHENG_INCLUDE_DIR "C:/Program Files/Daheng Imaging/GalaxySDK/Development/C++ SDK/inc" CACHE PATH "Daheng camera include dir")
+
+    if(EXISTS "${DAHENG_LIB}")
+        set(FOUND_DAHENG_LIB ON)
+        message(STATUS "Daheng camera library found at ${DAHENG_LIB}")
+    else()
+        message(STATUS "Daheng camera library not found at ${DAHENG_LIB}")
+    endif()
 else()
     set(DAHENG_LIB_SEARCH_PATHS /usr/local/Galaxy_camera/lib/x86_64/ CACHE PATH "Daheng camera lib dir")
     set(DAHENG_INCLUDE_DIR /usr/local/Galaxy_camera/inc/ CACHE PATH "Daheng camera include dir")
     find_library(DAHENG_LIB NAMES gxiapi PATHS ${DAHENG_LIB_SEARCH_PATHS})
     if(DAHENG_LIB)
         set(FOUND_DAHENG_LIB ON)
+        message(STATUS "Daheng camera library found at ${DAHENG_LIB}")
     endif()
 endif()
 
