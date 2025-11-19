@@ -15,6 +15,7 @@ DahengCamera::DahengCamera(float fps)
       raw8_image_buf_(nullptr),
       color_filter_supported_(false),
       color_filter_type_(GX_COLOR_FILTER_NONE) {
+    GXCloseLib();
     GX_STATUS st = GXInitLib();
     if (st != GX_STATUS_SUCCESS) {
         std::cout << "GXInitLib fail, status = " << st << std::endl;
@@ -22,6 +23,7 @@ DahengCamera::DahengCamera(float fps)
 }
 
 DahengCamera::~DahengCamera() {
+    GXCloseLib();
     // 不在析构中强制 destroyCamera，交由调用方控制，与 Hik 行为保持一致
 }
 
@@ -149,9 +151,22 @@ bool DahengCamera::openCamera(std::string serial_number) {
     std::cout << "Gx frame fps is: " << fps_ << std::endl;
 
     // 自动曝光/增益/白平衡，与 Hik 对齐
+    float auto_exposure_time = 1000000.0 / fps_;
     trySetEnumByString("ExposureAuto", "Continuous");
+    trySetFloat("ExposureTime", 20000);
+    trySetFloat("ExposureTime", 30000);
     trySetEnumByString("GainAuto", "Continuous");
     trySetEnumByString("BalanceWhiteAuto", "Once"); // 或 "Continuous"，视需求
+
+    // Trigger out
+    trySetEnumByString("LineSelector", "Line1");
+    trySetEnumByString("LineMode", "Output");
+    trySetEnumByString("LineSource", "ExposureActive");
+
+    GX_FLOAT_VALUE stFloatValue;
+    auto emStatus = GXGetFloatValue(device_handle_, "ExposureTime", &stFloatValue);
+    double dExposureTime = stFloatValue.dCurValue;
+    std::cout << "Current exposure time: " << dExposureTime << std::endl;
 
     // 使宽度可被 4 整除（与 Hik 兼容 ffmpeg 的考虑一致）
     {
@@ -180,10 +195,9 @@ bool DahengCamera::openExternalTrigger() {
     trySetEnumByString("TriggerActivation", "RisingEdge"); // 若不支持可忽略
 
     // Trigger out
+    trySetEnumByString("LineSelector", "Line1");
     trySetEnumByString("LineMode", "Output");
     trySetEnumByString("LineSource", "ExposureActive");
-    trySetEnumByString("LineSelector", "Line1");
-
 
     // 帧率节点与自动增益
     trySetEnumByString("GainAuto", "Continuous");
@@ -268,15 +282,7 @@ int DahengCamera::bufferToMat(PGX_FRAME_BUFFER pFrameBuffer, dvsense::ApsFrame& 
     if (!dst) return -1;
 
     // 若 ApsFrame 的缓冲大小不足，这里假定构造时已分配 w*h*3
-    // 将 rgb_image_buf_ 的 RGB 拷贝到 dst 并交换 R/B
-    for (size_t i = 0; i < pixels; ++i) {
-        unsigned char r = rgb_image_buf_[3 * i + 0];
-        unsigned char g = rgb_image_buf_[3 * i + 1];
-        unsigned char b = rgb_image_buf_[3 * i + 2];
-        dst[3 * i + 0] = b;
-        dst[3 * i + 1] = g;
-        dst[3 * i + 2] = r;
-    }
+    memcpy(dst, rgb_image_buf_, pixels * 3 * sizeof(uint8_t));
 
     return 0;
 }
@@ -286,7 +292,7 @@ int DahengCamera::getNextFrame(dvsense::ApsFrame& rgb_frame, int& drop_frame_num
 
     GX_STATUS st = GX_STATUS_SUCCESS;
     PGX_FRAME_BUFFER pFB = nullptr;
-    st = GXDQBuf(device_handle_, &pFB, 1000);
+    st = GXDQBuf(device_handle_, &pFB, 200);
     if (st != GX_STATUS_SUCCESS) {
         if (st != GX_STATUS_TIMEOUT) {
             std::cout << "GXDQBuf fail, status = " << st << std::endl;
@@ -324,9 +330,9 @@ int DahengCamera::startCamera() {
     frames_buffer_ = std::queue<dvsense::ApsFrame>();
 
     // 预推入空帧（与 Hik 行为一致）
-    for (int i = 0; i < 3; ++i) {
-        frames_buffer_.emplace(dvsense::ApsFrame(0, 0));
-    }
+    //for (int i = 0; i < 3; ++i) {
+    //    frames_buffer_.emplace(dvsense::ApsFrame(0, 0));
+    //}
 
     // 开流
 #ifdef _WIN32
@@ -443,6 +449,7 @@ void DahengCamera::unPreForAcquisition() {
 // 工具函数（容错设置）
 void DahengCamera::trySetEnumByString(const char* key, const char* val) {
     if (!device_handle_) return;
+
     GX_STATUS st = GXSetEnumValueByString(device_handle_, key, val);
     (void)st; // 静默失败
 }
@@ -454,6 +461,12 @@ void DahengCamera::trySetFloat(const char* key, double val) {
 void DahengCamera::trySetInt(const char* key, int64_t val) {
     if (!device_handle_) return;
     GX_STATUS st = GXSetIntValue(device_handle_, key, val);
+    (void)st;
+}
+void DahengCamera::trySetBool(const char* key, bool val)
+{
+    if (!device_handle_) return;
+    GX_STATUS st = GXSetBoolValue(device_handle_, key, val);
     (void)st;
 }
 bool DahengCamera::tryGetInt(const char* key, int64_t& out) {

@@ -60,6 +60,7 @@ private:
     // 尝试设置/读取节点的工具函数（容错不抛异常）
     void trySetEnumByString(const char* key, const char* val);
     void trySetFloat(const char* key, double val);
+    void trySetBool(const char* key, bool val);
     void trySetInt(const char* key, int64_t val);
     bool tryGetInt(const char* key, int64_t& out);
 
