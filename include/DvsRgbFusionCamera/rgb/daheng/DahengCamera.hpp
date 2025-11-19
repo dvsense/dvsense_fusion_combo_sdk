@@ -15,8 +15,8 @@ class DahengCamera : public RgbCamera
 {
 
 public:
-    explicit DahengCamera(float fps);
-    ~DahengCamera();
+    DahengCamera(float fps);
+    virtual ~DahengCamera();
 
     // 设备状态
     bool isConnect();

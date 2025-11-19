@@ -63,8 +63,8 @@ if(WIN32)
 else()
     set(DAHENG_LIB_SEARCH_PATHS /usr/local/Galaxy_camera/lib/x86_64/ CACHE PATH "Daheng camera lib dir")
     set(DAHENG_INCLUDE_DIR /usr/local/Galaxy_camera/inc/ CACHE PATH "Daheng camera include dir")
-    find_library(DAHENG_LIB NAMES gxiapi PATHS ${DAHENG_LIB_SEARCH_PATHS})
-    if(DAHENG_LIB)
+    find_library(DAHENG_LIBS NAMES gxiapi PATHS ${DAHENG_LIB_SEARCH_PATHS})
+    if(DAHENG_LIBS)
         set(FOUND_DAHENG_LIB ON)
         message(STATUS "Daheng camera library found at ${DAHENG_LIB}")
     endif()
@@ -171,10 +171,10 @@ PUBLIC
 )
 
 if(FOUND_DAHENG_LIB)
-    target_sources(DvsRgbFusionCamera PRIVATE "src/rgb/daheng/DahengCamera.cpp")
+    target_sources(DvsRgbFusionCamera PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/rgb/daheng/DahengCamera.cpp")
     target_include_directories(DvsRgbFusionCamera
     PUBLIC
-        ${DAHENG_INCLUDE_DIR}
+        $<BUILD_INTERFACE:${DAHENG_INCLUDE_DIR}>
     )
     target_link_libraries(DvsRgbFusionCamera 
     PUBLIC

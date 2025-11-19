@@ -12,7 +12,7 @@ class HikCamera: public RgbCamera
 {
 public:
     HikCamera(float fps);
-	~HikCamera();
+	virtual ~HikCamera();
 
     bool findCamera(std::vector<std::string>& serial_numbers) override;
 

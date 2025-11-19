@@ -2,6 +2,10 @@
 #include "DvsenseBase/logging/logger.hh"
 #include "DvsRgbFusionCamera/rgb/hik/HikCamera.hpp"
 
+#ifdef USE_DAHENG_CAMERA
+#include "DvsRgbFusionCamera/rgb/daheng/DahengCamera.hpp"
+#endif
+
 template<typename RGBCameraType>
 DvsRgbFusionCamera<RGBCameraType>::DvsRgbFusionCamera(float aps_fps): aps_fps_(aps_fps)
 {
@@ -380,3 +384,7 @@ int DvsRgbFusionCamera<RGBCameraType>::openApsExternalTrigger()
 }
 
 template class DvsRgbFusionCamera<HikCamera>;
+
+#ifdef USE_DAHENG_CAMERA
+template class DvsRgbFusionCamera<DahengCamera>;
+#endif

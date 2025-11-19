@@ -179,6 +179,12 @@ bool DahengCamera::openExternalTrigger() {
     trySetEnumByString("TriggerSource", "Line0");
     trySetEnumByString("TriggerActivation", "RisingEdge"); // 若不支持可忽略
 
+    // Trigger out
+    trySetEnumByString("LineMode", "Output");
+    trySetEnumByString("LineSource", "ExposureActive");
+    trySetEnumByString("LineSelector", "Line1");
+
+
     // 帧率节点与自动增益
     trySetEnumByString("GainAuto", "Continuous");
     trySetEnumByString("BalanceWhiteAuto", "Once");
