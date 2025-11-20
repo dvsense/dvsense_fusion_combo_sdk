@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
 	bias->setParam("bias_diff_on", 18);
 	bias->setParam("bias_diff_off", 24);
 	std::shared_ptr<dvsense::CameraTool> hal_sync = fusionCamera->getTool(dvsense::ToolType::TOOL_SYNC);
-	hal_sync->setParam("mode", std::string("SLAVE"));           //  MASTER   SLAVE
+	hal_sync->setParam("mode", std::string("MASTER"));           //  MASTER   SLAVE
 
 	cv::Mat display;
 	std::mutex dvs_frame_mutex;

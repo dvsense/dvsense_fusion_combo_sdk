@@ -153,8 +153,8 @@ bool DahengCamera::openCamera(std::string serial_number) {
     // 自动曝光/增益/白平衡，与 Hik 对齐
     float auto_exposure_time = 1000000.0 / fps_;
     trySetEnumByString("ExposureAuto", "Continuous");
-    trySetFloat("ExposureTime", 20000);
-    trySetFloat("ExposureTime", 30000);
+    trySetFloat("AutoExposureTimeMin", auto_exposure_time * 0.5);
+    trySetFloat("AutoExposureTimeMax", auto_exposure_time * 0.85);
     trySetEnumByString("GainAuto", "Continuous");
     trySetEnumByString("BalanceWhiteAuto", "Once"); // 或 "Continuous"，视需求
 
@@ -221,14 +221,15 @@ int DahengCamera::bufferToMat(PGX_FRAME_BUFFER pFrameBuffer, dvsense::ApsFrame& 
         case GX_PIXEL_FORMAT_BAYER_RG8:
         case GX_PIXEL_FORMAT_BAYER_GB8:
         case GX_PIXEL_FORMAT_BAYER_BG8: {
-            dxst = DxRaw8toRGB24(
+            dxst = DxRaw8toRGB24Ex(
                 (unsigned char*)pFrameBuffer->pImgBuf,
                 rgb_image_buf_,
                 pFrameBuffer->nWidth,
                 pFrameBuffer->nHeight,
                 RAW2RGB_NEIGHBOUR,
                 DX_PIXEL_COLOR_FILTER(color_filter_type_),
-                false
+                false,
+                DX_RGB_CHANNEL_ORDER::DX_ORDER_BGR
             );
             if (dxst != DX_OK) {
                 std::cout << "DxRaw8toRGB24 Failed: " << dxst << std::endl;
@@ -256,14 +257,15 @@ int DahengCamera::bufferToMat(PGX_FRAME_BUFFER pFrameBuffer, dvsense::ApsFrame& 
                 std::cout << "DxRaw16toRaw8 Failed: " << dxst << std::endl;
                 return -1;
             }
-            dxst = DxRaw8toRGB24(
+            dxst = DxRaw8toRGB24Ex(
                 raw8_image_buf_,
                 rgb_image_buf_,
                 pFrameBuffer->nWidth,
                 pFrameBuffer->nHeight,
                 RAW2RGB_NEIGHBOUR,
                 DX_PIXEL_COLOR_FILTER(color_filter_type_),
-                false
+                false,
+                DX_RGB_CHANNEL_ORDER::DX_ORDER_BGR
             );
             if (dxst != DX_OK) {
                 std::cout << "DxRaw8toRGB24 Failed: " << dxst << std::endl;
