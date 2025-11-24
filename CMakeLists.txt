@@ -175,6 +175,7 @@ if(FOUND_DAHENG_LIB)
     target_include_directories(DvsRgbFusionCamera
     PUBLIC
         $<BUILD_INTERFACE:${DAHENG_INCLUDE_DIR}>
+        $<INSTALL_INTERFACE:${DAHENG_INCLUDE_DIR}>
     )
     target_link_libraries(DvsRgbFusionCamera 
     PUBLIC
