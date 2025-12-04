@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
+set(CMAKE_TOOLCHAIN_FILE "D:/vcpkg-DVDriver/vcpkg-2023.11.20/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 project(DvsenseComboSdk)
 
 # Use standard install directories (bin, lib, include, etc.)
