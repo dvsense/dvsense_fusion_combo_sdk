@@ -253,7 +253,7 @@
 			memcpy(dst_row, src_row, actual_width_bytes);
 		}
 
-		sws_scale(sws_ctx_, src_frame_->data, src_frame_->linesize, 0, src_height_, dst_frame_->data, dst_frame_->linesize);
+		sws_scale(sws_ctx_, src_frame_->data, src_frame_->linesize, 0, src_height_ - 1, dst_frame_->data, dst_frame_->linesize);
 
 		if(ts == -1)
 		{
