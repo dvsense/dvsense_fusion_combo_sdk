@@ -1,6 +1,8 @@
 #include "DvsRgbFusionCamera/CameraManager/DvsRgbFusionCamera.hpp"
 #include "DvsenseBase/logging/logger.hh"
+#ifdef USE_HIK_CAMERA
 #include "DvsRgbFusionCamera/rgb/hik/HikCamera.hpp"
+#endif
 
 #ifdef USE_DAHENG_CAMERA
 #include "DvsRgbFusionCamera/rgb/daheng/DahengCamera.hpp"
@@ -307,7 +309,6 @@ void DvsRgbFusionCamera<RGBCameraType>::extTriggerSyncCallback()
     );
 }
 
-
 template<typename RGBCameraType>
 int DvsRgbFusionCamera<RGBCameraType>::addApsFrameCallback(const FrameCallback& frameCallback) {
     frame_callback_id_num_++;
@@ -383,7 +384,9 @@ int DvsRgbFusionCamera<RGBCameraType>::openApsExternalTrigger()
     return true;
 }
 
+#ifdef USE_HIK_CAMERA
 template class DvsRgbFusionCamera<HikCamera>;
+#endif
 
 #ifdef USE_DAHENG_CAMERA
 template class DvsRgbFusionCamera<DahengCamera>;

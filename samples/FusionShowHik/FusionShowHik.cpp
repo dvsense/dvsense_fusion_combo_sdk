@@ -1,7 +1,6 @@
 #include "DvsRgbFusionCamera/CameraManager/DvsRgbFusionCamera.hpp"
 #include "DvsRgbCalib/CalibrateThroughFile.hpp"
 #include "DvsRgbFusionCamera/rgb/hik/HikCamera.hpp"
-#include "DvsRgbFusionCamera/rgb/daheng/DahengCamera.hpp"
 
 // purple - magenta
 cv::Vec3b color_bg = cv::Vec3b(0x00, 0x00, 0x00);
@@ -13,6 +12,7 @@ cv::Vec3b color_off = cv::Vec3b(0x00, 0xff, 0x00);
 //cv::Vec3b color_on = cv::Vec3b(0xbf, 0xbc, 0xb4);
 //cv::Vec3b color_off = cv::Vec3b(0x40, 0x3d, 0x33);
 
+const float dvs_xy_size = 4.86;
 
 int main(int argc, char* argv[])
 {
@@ -33,7 +33,6 @@ int main(int argc, char* argv[])
 	std::mutex display_image_mutex;
 
 	std::unique_ptr<DvsRgbFusionCamera<HikCamera>> fusionCamera = std::make_unique<DvsRgbFusionCamera<HikCamera>>(30);
-	//std::unique_ptr<DvsRgbFusionCamera<DahengCamera>> fusionCamera = std::make_unique<DvsRgbFusionCamera<DahengCamera>>(30);
 
 	std::vector<dvsense::CameraDescription> dvs_serials;
 	std::vector<std::string> rgb_serials;
@@ -95,27 +94,26 @@ int main(int argc, char* argv[])
 
 				if (!is_calibration_active)
 				{
+					float k = 5.86 / dvs_xy_size;
+					cv::Mat scaled_image, padded_image;
+					cv::resize(reconstructed_image, padded_image, cv::Size(), k, k, cv::INTER_LINEAR);
+					//cv::copyMakeBorder(scaled_image, padded_image,
+					//	dvs_height, dvs_height, dvs_width, dvs_width,
+					//	cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0)); 
 
-					static int new_dvs_width = dvs_width * (4.86 / 2.5);
-					static int new_dvs_height = dvs_height * (4.86 / 2.5);
-
-					int y_start = (aps_height - new_dvs_height) / 2;
-					int x_start = (aps_width - new_dvs_width) / 2;
-					aps_resize = reconstructed_image(cv::Rect(x_start, y_start, new_dvs_width, new_dvs_height));
-					cv::resize(aps_resize, aps_resize, cv::Size(dvs_width, dvs_height), cv::INTER_AREA);
-
-					cv::Mat translation_matrix = (cv::Mat_<double>(2, 3) << 1, 0, offset_x, 0, 1, offset_y);
-					cv::Mat move_result;
-					cv::warpAffine(aps_resize, move_result, translation_matrix, aps_resize.size(),
-						cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
+					int y_start = (padded_image.rows - dvs_height) / 2;
+					int x_start = (padded_image.cols - dvs_width) / 2;
+					int y_start_offset = (std::min)((std::max)(0, y_start - offset_y), padded_image.rows - dvs_height);
+					int x_start_offset = (std::min)((std::max)(0, x_start - offset_x), padded_image.cols - dvs_width);
+					aps_resize = padded_image(cv::Rect(x_start_offset, y_start_offset, dvs_width, dvs_height));
 					{
 						std::unique_lock<std::mutex> lock(dvs_frame_mutex);
-						move_result.setTo(cv::Scalar(0, 0, 0), new_dvs_frame);
-						move_result = move_result + new_dvs_frame;
+						aps_resize.setTo(cv::Scalar(0, 0, 0), new_dvs_frame);
+						aps_resize = aps_resize + new_dvs_frame;
 						new_dvs_frame.setTo(cv::Scalar(0, 0, 0));
 					}
 					std::unique_lock<std::mutex> lock(display_image_mutex);
-					image_display_queue.emplace(move_result);
+					image_display_queue.emplace(aps_resize);
 				}
 				else
 				{

@@ -2,21 +2,26 @@ cmake_minimum_required(VERSION 3.8)
 set(CMAKE_TOOLCHAIN_FILE "D:/vcpkg-DVDriver/vcpkg-2023.11.20/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 project(DvsenseComboSdk)
 
+set(SELECT_HIK_CAMERA ON)
+set(SELECT_DAHENG_CAMERA ON)
+
 # Use standard install directories (bin, lib, include, etc.)
 include(GNUInstallDirs)
 
-if(WIN32)
-    cmake_policy(SET CMP0091 NEW)
-    set(CMAKE_USE_WIN32_MSVC_LONG_PATHS ON)
-    set(MVS_LIB_SEARCH_PATHS "C:/Program Files (x86)/MVS/Development/Libraries/win64/" CACHE PATH "MVS root dir")
-    set(MVS_INCLUDE_DIR "C:/Program Files (x86)/MVS/Development/Includes" CACHE PATH "MVS include dir")
-else()
-    set(MVS_LIB_SEARCH_PATHS /opt/MVS/lib/64 CACHE PATH "MVS root dir")
-    set(MVS_INCLUDE_DIR /opt/MVS/include/ CACHE PATH "MVS include dir")
-endif()
-find_library(MVS_LIB NAMES MvCameraControl PATHS ${MVS_LIB_SEARCH_PATHS})
-if(NOT MVS_LIB)
-    message(FATAL_ERROR "MvCameraControl library not found")
+if(SELECT_HIK_CAMERA)
+    if(WIN32)
+        cmake_policy(SET CMP0091 NEW)
+        set(CMAKE_USE_WIN32_MSVC_LONG_PATHS ON)
+        set(MVS_LIB_SEARCH_PATHS "C:/Program Files (x86)/MVS/Development/Libraries/win64" CACHE PATH "MVS root dir")
+        set(MVS_INCLUDE_DIR "C:/Program Files (x86)/MVS/Development/Includes" CACHE PATH "MVS include dir")
+    else()
+        set(MVS_LIB_SEARCH_PATHS /opt/MVS/lib/64 CACHE PATH "MVS root dir")
+        set(MVS_INCLUDE_DIR /opt/MVS/include/ CACHE PATH "MVS include dir")
+    endif()
+    find_library(MVS_LIB NAMES MvCameraControl PATHS ${MVS_LIB_SEARCH_PATHS})
+    if(NOT MVS_LIB)
+        message(FATAL_ERROR "MvCameraControl library not found")
+    endif()
 endif()
 
 set(FOUND_DAHENG_LIB OFF)
@@ -148,7 +153,6 @@ find_package(DvsenseDriver COMPONENTS Driver REQUIRED)
 add_library(DvsRgbFusionCamera SHARED
     "src/CameraManager/DvsRgbFusionCamera.cpp"
     "src/dvs/DvsEventCamera.cpp"
-    "src/rgb/hik/HikCamera.cpp"
     "src/rgb/RgbCamera.cpp"   
     "src/CameraManager/DataToVideo.cpp" )
 
@@ -156,13 +160,11 @@ target_include_directories(DvsRgbFusionCamera
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
         $<BUILD_INTERFACE:${FFMPEG_DIR}/include>
-        $<BUILD_INTERFACE:${MVS_INCLUDE_DIR}>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 target_link_libraries(DvsRgbFusionCamera 
 PUBLIC
-    ${MVS_LIB}
     opencv_core
     DvsenseDriver::Driver
     ${AVCODEC_LIB}
@@ -186,6 +188,19 @@ if(FOUND_DAHENG_LIB)
     message(STATUS "Daheng camera library found and linked.")
 else()
     message(STATUS "Daheng camera library not found. Skipping Daheng camera support.")
+endif()
+
+if(SELECT_HIK_CAMERA)
+    target_sources(DvsRgbFusionCamera PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/rgb/hik/HikCamera.cpp")
+    target_include_directories(DvsRgbFusionCamera
+    PUBLIC
+        $<BUILD_INTERFACE:${MVS_INCLUDE_DIR}>
+    )
+    target_link_libraries(DvsRgbFusionCamera 
+    PUBLIC
+        ${MVS_LIB}
+    )
+    target_compile_definitions(DvsRgbFusionCamera PRIVATE USE_HIK_CAMERA)
 endif()
 
 # Provide a namespaced ALIAS for in-tree consumers matching the exported name
@@ -213,10 +228,15 @@ add_library(DvsRgbCalib::DvsRgbCalib ALIAS DvsRgbCalib)
 
 option(BUILD_SAMPLES "Build samples" OFF)
 if (BUILD_SAMPLES)
-    add_subdirectory(samples/FusionShow)
+    if(SELECT_HIK_CAMERA)
+        add_subdirectory(samples/FusionShowHik)
+        add_subdirectory(samples/ExternalTriggerShow)
+    endif()
+    if(SELECT_DAHENG_CAMERA)
+        add_subdirectory(samples/FusionShowDaHeng)
+    endif()
     add_subdirectory(samples/FileReader)
     add_subdirectory(samples/FileCut)
-    add_subdirectory(samples/ExternalTriggerShow)
 endif()
 
 option(BUILD_DOCS "Build documentation" OFF)
