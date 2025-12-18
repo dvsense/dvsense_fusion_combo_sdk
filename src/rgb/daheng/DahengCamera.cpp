@@ -52,20 +52,20 @@ bool DahengCamera::findCamera(std::vector<std::string>& serial_numbers) {
         GX_DEVICE_INFO stDeviceInfo;
         GXGetDeviceInfo(i, &stDeviceInfo);
 
-        if(stDeviceInfo.emDevType == GX_DEVICE_CLASS_UNKNOWN) {
+        if (stDeviceInfo.emDevType == GX_DEVICE_CLASS_UNKNOWN) {
             continue;
         }
         else if(stDeviceInfo.emDevType == GX_DEVICE_CLASS_U3V) {
-            serial_numbers.emplace_back(stDeviceInfo.stU3VDevInfo.chSerialNumber);
+            serial_numbers.emplace_back((char*)stDeviceInfo.DevInfo.stU3VDevInfo.chSerialNumber);
         }
         else if(stDeviceInfo.emDevType = GX_DEVICE_CLASS_GEV) {
-            serial_numbers.emplace_back(stDeviceInfo.stGEVDevInfo.chSerialNumber);
+            serial_numbers.emplace_back((char*)stDeviceInfo.DevInfo.stGEVDevInfo.chSerialNumber);
         }
         else if(stDeviceInfo.emDevType = GX_DEVICE_CLASS_CXP) {
-            serial_numbers.emplace_back(stDeviceInfo.stCXPDevInfo.chSerialNumber);
+            serial_numbers.emplace_back((char*)stDeviceInfo.DevInfo.stCXPDevInfo.chSerialNumber);
         }
         else if(stDeviceInfo.emDevType = GX_DEVICE_CLASS_USB2) {
-            serial_numbers.emplace_back(stDeviceInfo.stUSBDevInfo.chSerialNumber);
+            serial_numbers.emplace_back((char*)stDeviceInfo.DevInfo.stUSBDevInfo.chSerialNumber);
         }
         else {
             continue;
@@ -105,7 +105,7 @@ bool DahengCamera::openCamera(std::string serial_number) {
                 continue;
             }
             else if(stDeviceInfo.emDevType == GX_DEVICE_CLASS_U3V) {
-                std::string sn = std::string(stDeviceInfo.stU3VDevInfo.chSerialNumber);
+                std::string sn = std::string((char*)stDeviceInfo.DevInfo.stU3VDevInfo.chSerialNumber);
                 if(sn == serial_number) {
                     opened = tryOpen(i, stDeviceInfo, device_handle_);
                     break;
@@ -114,7 +114,7 @@ bool DahengCamera::openCamera(std::string serial_number) {
                 }
             }
             else if(stDeviceInfo.emDevType = GX_DEVICE_CLASS_GEV) {
-                std::string sn = std::string(stDeviceInfo.stGEVDevInfo.chSerialNumber);
+                std::string sn = std::string((char*)stDeviceInfo.DevInfo.stGEVDevInfo.chSerialNumber);
                 if(sn == serial_number) {
                     opened = tryOpen(i, stDeviceInfo, device_handle_);
                     break;
@@ -123,7 +123,7 @@ bool DahengCamera::openCamera(std::string serial_number) {
                 }
             }
             else if(stDeviceInfo.emDevType = GX_DEVICE_CLASS_CXP) {
-                std::string sn = std::string(stDeviceInfo.stCXPDevInfo.chSerialNumber);
+                std::string sn = std::string((char*)stDeviceInfo.DevInfo.stCXPDevInfo.chSerialNumber);
                 if(sn == serial_number) {
                     opened = tryOpen(i, stDeviceInfo, device_handle_);
                     break;
@@ -132,7 +132,7 @@ bool DahengCamera::openCamera(std::string serial_number) {
                 }
             }
             else if(stDeviceInfo.emDevType = GX_DEVICE_CLASS_USB2) {
-                std::string sn = std::string(stDeviceInfo.stUSBDevInfo.chSerialNumber);
+                std::string sn = std::string((char*)stDeviceInfo.DevInfo.stUSBDevInfo.chSerialNumber);
                 if(sn == serial_number) {
                     opened = tryOpen(i, stDeviceInfo, device_handle_);
                     break;
@@ -207,7 +207,6 @@ bool DahengCamera::openCamera(std::string serial_number) {
     trySetEnumByString("LineSelector", "Line1");
     trySetEnumByString("LineMode", "Output");
     trySetEnumByString("LineSource", "ExposureActive");
-    trySetBool
 
     GX_FLOAT_VALUE stFloatValue;
     auto emStatus = GXGetFloatValue(device_handle_, "ExposureTime", &stFloatValue);
