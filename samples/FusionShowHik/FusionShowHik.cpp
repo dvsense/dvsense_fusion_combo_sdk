@@ -174,16 +174,16 @@ int main(int argc, char* argv[])
 			is_recording = !is_recording;
 		}
 
-		if ((key & 0xFF) == '8') {  // 上键
+		if ((key & 0xFF) == 'w') {  // 上键
 			offset_y--;
 		}
-		else if ((key & 0xFF) == '2') {  // 下键
+		else if ((key & 0xFF) == 's') {  // 下键
 			offset_y++;
 		}
-		else if ((key & 0xFF) == '4') {  // 左键
+		else if ((key & 0xFF) == 'a') {  // 左键
 			offset_x--;
 		}
-		else if ((key & 0xFF) == '6') {  // 右键
+		else if ((key & 0xFF) == 'd') {  // 右键
 			offset_x++;
 		}
 	}
