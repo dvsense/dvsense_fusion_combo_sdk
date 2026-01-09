@@ -12,7 +12,7 @@ class HikCamera: public RgbCamera
 {
 public:
     HikCamera(float fps);
-	~HikCamera();
+	virtual ~HikCamera();
 
     bool findCamera(std::vector<std::string>& serial_numbers) override;
 
@@ -31,6 +31,8 @@ public:
     int getHeight() override;
 
     int destroyCamera() override;
+
+    bool openExternalTrigger() override;
 
 private:
     void bufferToMat(dvsense::ApsFrame& rgb_frame);

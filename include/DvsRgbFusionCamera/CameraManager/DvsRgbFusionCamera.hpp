@@ -107,7 +107,7 @@ public:
 	 * \~chinese @param cb 回调函数
 	 * \~chinese @return 回调函数id，使用此id可以调用 @ref removeTriggerInCallback 来移除回调函数
 	 */
-	uint32_t addTriggerInCallback(const NewTriggerInCallback& newTriggerInCallback);
+	uint32_t addSyncSignalCallback(const NewTriggerInCallback& newTriggerInCallback);
 
 	/**
 	 * \~english @brief Remove a callback function by id
@@ -119,7 +119,7 @@ public:
 	 * \~chinese @return 如果成功移除则返回true
 	 * \~chinese @return 如果回调函数列表中没有对应id的回调函数，则返回false
 	 */
-	bool removeTriggerInCallback(uint32_t callback_id);
+	bool removeSyncSignalCallback(uint32_t callback_id);
 
 	/**
 	 * \~english @brief Add a callback function to handle aps data
@@ -206,6 +206,14 @@ public:
 	 * \~chinese @return std::shared_ptr<CameraTool> 工具
 	 */
 	const std::shared_ptr<dvsense::CameraTool> getTool(dvsense::ToolType type);
+
+	/**
+	 * \~english @brief Open the RGB camera external trigger
+	 * \~english @return int 0 if success, otherwise return error code
+	 * \~chinese @brief ͣ开启RGB相机的外部触发
+	 * \~chinese @return int 如果成功开启则返回0，否则返回错误代码
+	 */
+	int openApsExternalTrigger();
 
 	int destroy();
 

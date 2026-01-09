@@ -1,6 +1,12 @@
 #include "DvsRgbFusionCamera/CameraManager/DvsRgbFusionCamera.hpp"
 #include "DvsenseBase/logging/logger.hh"
+#ifdef USE_HIK_CAMERA
 #include "DvsRgbFusionCamera/rgb/hik/HikCamera.hpp"
+#endif
+
+#ifdef USE_DAHENG_CAMERA
+#include "DvsRgbFusionCamera/rgb/daheng/DahengCamera.hpp"
+#endif
 
 template<typename RGBCameraType>
 DvsRgbFusionCamera<RGBCameraType>::DvsRgbFusionCamera(float aps_fps): aps_fps_(aps_fps)
@@ -131,6 +137,30 @@ int DvsRgbFusionCamera<RGBCameraType>::start(dvsense::STREAM_TYPE type)
         dvs_camera_->startCamera();
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         ext_trigger_sync_running_ = true;
+
+        std::shared_ptr<dvsense::CameraTool> hal_sync = dvs_camera_->getTool(dvsense::ToolType::TOOL_SYNC);
+        std::string sync_type;
+        hal_sync->getParam("mode", sync_type);
+        if (sync_type == "SLAVE")
+        {
+            bool master_opening = false;
+            uint32_t event_id = dvs_camera_->registerEventCallback(
+                [&master_opening](const dvsense::EventIterator_t begin, const dvsense::EventIterator_t end) {
+                    for (auto it = begin; it != end; ++it) {
+                        master_opening = true;
+                    }
+                }
+            );
+            while (!master_opening) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
+            bool ret = dvs_camera_->removeEventCallback(event_id);
+            if (!ret)
+            {
+                std::cout << "remove event callback failed!" << std::endl;
+                return -1;
+            }
+        }
         rgb_camera_->startCamera();
         return 0;
     }
@@ -184,13 +214,13 @@ bool DvsRgbFusionCamera<RGBCameraType>::removeEventsStreamHandleCallback(uint32_
 }
 
 template<typename RGBCameraType>
-uint32_t DvsRgbFusionCamera<RGBCameraType>::addTriggerInCallback(const NewTriggerInCallback& newTriggerInCallback)
+uint32_t DvsRgbFusionCamera<RGBCameraType>::addSyncSignalCallback(const NewTriggerInCallback& newTriggerInCallback)
 {
     return dvs_camera_->addTriggerInCallback(newTriggerInCallback);
 }
 
 template<typename RGBCameraType>
-bool DvsRgbFusionCamera<RGBCameraType>::removeTriggerInCallback(uint32_t callback_id)
+bool DvsRgbFusionCamera<RGBCameraType>::removeSyncSignalCallback(uint32_t callback_id)
 {
     return dvs_camera_->removeTriggerInCallback(callback_id);
 }
@@ -213,13 +243,11 @@ int DvsRgbFusionCamera<RGBCameraType>::startRecording(std::string output_dir) {
         json_path = output_dir + "/fusion-" + current_time + ".json";
     }
 
-    std::cout << "json_path" << json_path << std::endl;
     json_file_.open(json_path);
     if (!json_file_.is_open()) {
         std::cerr << "Fatal Error: Failed to open JSON file: " << json_path << std::endl;
         std::exit(EXIT_FAILURE);
-    }
-
+    }                                                                                                                                                                                                                            
 
     std::string dvs_file_path = output_dir + "/fusion-" + current_time + ".raw";
     std::string aps_file_path = output_dir + "/fusion-" + current_time + ".mp4";
@@ -280,7 +308,6 @@ void DvsRgbFusionCamera<RGBCameraType>::extTriggerSyncCallback()
         }
     );
 }
-
 
 template<typename RGBCameraType>
 int DvsRgbFusionCamera<RGBCameraType>::addApsFrameCallback(const FrameCallback& frameCallback) {
@@ -346,4 +373,21 @@ int DvsRgbFusionCamera<RGBCameraType>::destroy()
     return ret;
 }
 
+template<typename RGBCameraType>
+int DvsRgbFusionCamera<RGBCameraType>::openApsExternalTrigger()
+{
+    bool ret = rgb_camera_->openExternalTrigger();
+    if (!ret)
+    {
+        return false;
+    }
+    return true;
+}
+
+#ifdef USE_HIK_CAMERA
 template class DvsRgbFusionCamera<HikCamera>;
+#endif
+
+#ifdef USE_DAHENG_CAMERA
+template class DvsRgbFusionCamera<DahengCamera>;
+#endif

@@ -12,6 +12,7 @@ cv::Vec3b color_off = cv::Vec3b(0x00, 0xff, 0x00);
 //cv::Vec3b color_on = cv::Vec3b(0xbf, 0xbc, 0xb4);
 //cv::Vec3b color_off = cv::Vec3b(0x40, 0x3d, 0x33);
 
+const float dvs_xy_size = 4.86;
 
 int main(int argc, char* argv[])
 {
@@ -23,15 +24,15 @@ int main(int argc, char* argv[])
 	    data_save_path = argv[1];	
 	}
 
-	bool is_calibration_active = true;
+	bool is_calibration_active = false;
 
 	std::unique_ptr<CalibrateThroughFile> calibrator = std::make_unique<CalibrateThroughFile>("./calibration_result.json");
-	cv::Mat H = calibrator->getApsToDvsHomographyMatrix(600);
+	cv::Mat H = calibrator->getApsToDvsHomographyMatrix(1000);
 
 	std::queue<cv::Mat> image_display_queue;
 	std::mutex display_image_mutex;
 
-	std::unique_ptr<DvsRgbFusionCamera<HikCamera>> fusionCamera = std::make_unique<DvsRgbFusionCamera<HikCamera>>(45);
+	std::unique_ptr<DvsRgbFusionCamera<HikCamera>> fusionCamera = std::make_unique<DvsRgbFusionCamera<HikCamera>>(30);
 
 	std::vector<dvsense::CameraDescription> dvs_serials;
 	std::vector<std::string> rgb_serials;
@@ -60,6 +61,8 @@ int main(int argc, char* argv[])
 	std::shared_ptr<dvsense::CameraTool> bias = fusionCamera->getTool(dvsense::ToolType::TOOL_BIAS);
 	bias->setParam("bias_diff_on", 18);
 	bias->setParam("bias_diff_off", 24);
+	std::shared_ptr<dvsense::CameraTool> hal_sync = fusionCamera->getTool(dvsense::ToolType::TOOL_SYNC);
+	hal_sync->setParam("mode", std::string("MASTER"));           //  MASTER   SLAVE
 
 	cv::Mat display;
 	std::mutex dvs_frame_mutex;
@@ -74,8 +77,10 @@ int main(int argc, char* argv[])
 		}
 	);
 
+	int offset_x = 0;
+	int offset_y = 0;
 	fusionCamera->addApsFrameCallback(
-		[&is_calibration_active, &calibrator, &H, &image_display_queue, &new_dvs_frame, &dvs_width, &dvs_height, &dvs_frame_mutex, &display_image_mutex](const dvsense::ApsFrame& rgbframe)
+		[&offset_x, &offset_y, &is_calibration_active, &calibrator, &H, &image_display_queue, &new_dvs_frame, &dvs_width, &dvs_height, &dvs_frame_mutex, &display_image_mutex](const dvsense::ApsFrame& rgbframe)
 		{
 			if (rgbframe.getDataSize() != 0 && image_display_queue.empty())
 			{
@@ -89,14 +94,18 @@ int main(int argc, char* argv[])
 
 				if (!is_calibration_active)
 				{
+					float k = 5.86 / dvs_xy_size;
+					cv::Mat scaled_image, padded_image;
+					cv::resize(reconstructed_image, padded_image, cv::Size(), k, k, cv::INTER_LINEAR);
+					//cv::copyMakeBorder(scaled_image, padded_image,
+					//	dvs_height, dvs_height, dvs_width, dvs_width,
+					//	cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0)); 
 
-					static int new_dvs_width = dvs_width * 1.215;
-					static int new_dvs_height = dvs_height * 1.215;
-
-					int y_start = (aps_height - new_dvs_height) / 2;
-					int x_start = (aps_width - new_dvs_width) / 2;
-					aps_resize = reconstructed_image(cv::Rect(x_start, y_start, new_dvs_width, new_dvs_height));
-					cv::resize(aps_resize, aps_resize, cv::Size(dvs_width, dvs_height), cv::INTER_AREA);
+					int y_start = (padded_image.rows - dvs_height) / 2;
+					int x_start = (padded_image.cols - dvs_width) / 2;
+					int y_start_offset = (std::min)((std::max)(0, y_start - offset_y), padded_image.rows - dvs_height);
+					int x_start_offset = (std::min)((std::max)(0, x_start - offset_x), padded_image.cols - dvs_width);
+					aps_resize = padded_image(cv::Rect(x_start_offset, y_start_offset, dvs_width, dvs_height));
 					{
 						std::unique_lock<std::mutex> lock(dvs_frame_mutex);
 						aps_resize.setTo(cv::Scalar(0, 0, 0), new_dvs_frame);
@@ -163,6 +172,19 @@ int main(int argc, char* argv[])
 				fusionCamera->stopRecording();
 			}
 			is_recording = !is_recording;
+		}
+
+		if ((key & 0xFF) == 'w') {  // 上键
+			offset_y--;
+		}
+		else if ((key & 0xFF) == 's') {  // 下键
+			offset_y++;
+		}
+		else if ((key & 0xFF) == 'a') {  // 左键
+			offset_x--;
+		}
+		else if ((key & 0xFF) == 'd') {  // 右键
+			offset_x++;
 		}
 	}
 	if (is_recording)
