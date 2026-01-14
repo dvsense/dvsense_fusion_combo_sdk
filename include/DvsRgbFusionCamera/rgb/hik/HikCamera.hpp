@@ -1,31 +1,18 @@
 #pragma once
-#include "opencv2/opencv.hpp"
-#include "opencv2/core.hpp"
-#include "opencv2/imgproc.hpp"
-#include "opencv2/videoio.hpp"
-
+#include <opencv2/core.hpp>
 #include "MvCameraControl.h"
 
 #include <atomic>
 #include <thread>
+#include <queue>
 #include "DvsRgbFusionCamera/rgb/RgbCamera.hpp"
 
-struct FrameAndDrop
-{
-    cv::Mat frame;
-    int drop_frame_num;
-};
 
 class HikCamera: public RgbCamera
 {
 public:
-    HikCamera(float fps): fps_(fps)  {
-        int ret = MV_CC_Initialize();
-        if (ret != MV_OK) {
-            std::cout << "MV_CC_Initialize fail! ret = " << ret << std::endl;
-        }
-    }
-	~HikCamera();
+    HikCamera(float fps);
+	virtual ~HikCamera();
 
     bool findCamera(std::vector<std::string>& serial_numbers) override;
 
@@ -37,7 +24,7 @@ public:
 
     void stopCamera() override;
 
-    bool getNewRgbFrame(cv::Mat& output_frame) override;
+    bool getNewRgbFrame(dvsense::ApsFrame& output_frame) override;
 
     int getWidth() override;
 
@@ -45,24 +32,20 @@ public:
 
     int destroyCamera() override;
 
+    bool openExternalTrigger() override;
+
 private:
+    void bufferToMat(dvsense::ApsFrame& rgb_frame);
+    int getNextFrame(dvsense::ApsFrame& rgb_frame, int& drop_frame_num);
+
     void* aps_camera_handle_ = nullptr;
     MV_FRAME_OUT frame_out_ = {};
-    std::atomic<bool> is_grab_image_thread_running_ = false;
+    std::atomic<bool> is_grab_image_thread_running_;
     std::thread grab_frame_thread_;
     std::mutex frame_buffer_mutex_;
-    std::queue<cv::Mat> frames_buffer_;
+    std::queue<dvsense::ApsFrame> frames_buffer_;
     float fps_;
  
-    int frame_callback_id_num_ = 0;
-
-
-    void bufferToMat(cv::Mat& frame);
-    int getNextFrame(FrameAndDrop& frame_and_drops);
-
-    int64_t last_frame_id_ = -1;
-
-
-
-
+    int frame_callback_id_num_;
+    int64_t last_frame_id_;
 };

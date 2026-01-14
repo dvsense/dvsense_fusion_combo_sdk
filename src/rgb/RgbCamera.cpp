@@ -1,7 +1,11 @@
 #include "DvsRgbFusionCamera/rgb/RgbCamera.hpp"
-#include "DvsRgbFusionCamera/rgb/hik/HikCamera.hpp"
 
-std::unique_ptr<RgbCamera> RgbCamera::create(float fps) 
-{
-	return std::make_unique<HikCamera>(fps);
-}
+#ifdef USE_HIK_CAMERA
+#include "DvsRgbFusionCamera/rgb/hik/HikCamera.hpp"
+template std::unique_ptr<RgbCamera> RgbCamera::create<HikCamera>(float fps);
+#endif
+
+#ifdef USE_DAHENG_CAMERA
+#include "DvsRgbFusionCamera/rgb/daheng/DahengCamera.hpp"
+template std::unique_ptr<RgbCamera> RgbCamera::create<DahengCamera>(float fps);
+#endif

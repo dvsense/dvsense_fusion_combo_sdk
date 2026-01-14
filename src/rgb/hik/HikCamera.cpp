@@ -1,4 +1,15 @@
 #include "DvsRgbFusionCamera/rgb/hik/HikCamera.hpp"
+#include <iostream>
+
+HikCamera::HikCamera(float fps) : fps_(fps) {
+    is_grab_image_thread_running_ = false;
+    frame_callback_id_num_ = 0;
+    last_frame_id_ = -1;
+    int ret = MV_CC_Initialize();
+    if (ret != MV_OK) {
+        std::cout << "MV_CC_Initialize fail! ret = " << ret << std::endl;
+    }
+}
 
 HikCamera::~HikCamera()
 {
@@ -94,7 +105,7 @@ bool HikCamera::openCamera(std::string serial_number) {
     //Set HB mode to off
     ret = MV_CC_SetEnumValue(aps_camera_handle_, "ImageCompressionMode", 0);
 
-    // set frame rate to 30 FPS
+    // set frame rate
     ret = MV_CC_SetFloatValue(aps_camera_handle_, "AcquisitionFrameRate", fps_);
     std::cout << "Aps frame fps is: " << fps_ << std::endl;
     if (ret != MV_OK) {
@@ -111,7 +122,8 @@ bool HikCamera::openCamera(std::string serial_number) {
     //ret = MV_CC_SetBoolValue(aps_camera_handle_, "ReverseX", true);
 
     //Auto Exposure
-    ret = MV_CC_SetIntValue(aps_camera_handle_, "AutoExposureTimeUpperLimit", 20000);
+    int auto_exposure_time = 1000000 / fps_;
+    ret = MV_CC_SetIntValue(aps_camera_handle_, "AutoExposureTimeUpperLimit", auto_exposure_time);
     ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "ExposureAuto", "Continuous");
 
     //// Gain
@@ -124,14 +136,58 @@ bool HikCamera::openCamera(std::string serial_number) {
     }
 
     ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "LineMode", "Strobe");
-    if (ret != MV_OK) {
-        std::cout << "LineMode fail! ret = " << ret << std::endl;
-    }
-    ret = MV_CC_SetBoolValue(aps_camera_handle_, "LineInverter", true);
-    if (ret != MV_OK) {
-        std::cout << "SetEnumValueByString fail! ret = " << ret << std::endl;
-    }
     
+    ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "LineSource", "ExposureStartActive");
+    if (ret != MV_OK) {
+        std::cout << "MV_CC_SetEnumValue LineSource fail! ret = " << ret << std::endl;
+    }
+
+    ret = MV_CC_SetBoolValue(aps_camera_handle_, "StrobeEnable", true);
+    if (ret != MV_OK) {
+        std::cout << "MV_CC_SetEnable fail! ret = " << ret << std::endl;
+    }
+
+    // Here setting the width is for better compatibility when using ffmpeg which could not handle the width that is not divisible by 4 in some cases.
+    int64_t set_width = int(getWidth() / 4) * 4;
+    MV_CC_SetIntValueEx(aps_camera_handle_, "Width", set_width);
+
+    return true;
+}
+
+bool HikCamera::openExternalTrigger()
+{
+    bool ret = MV_CC_SetEnumValue(aps_camera_handle_, "AcquisitionMode", 2);
+    ret = MV_CC_SetEnumValue(aps_camera_handle_, "TriggerSource", 0);
+    ret = MV_CC_SetEnumValue(aps_camera_handle_, "TriggerMode", 1);
+    ret = MV_CC_SetCommandValue(aps_camera_handle_, "AcquisitionStart");
+
+    //Set HB mode to off
+    ret = MV_CC_SetEnumValue(aps_camera_handle_, "ImageCompressionMode", 0);
+    // set frame rate
+    ret = MV_CC_SetFloatValue(aps_camera_handle_, "AcquisitionFrameRate", fps_);
+    std::cout << "Aps frame fps is: " << fps_ << std::endl;
+    if (ret != MV_OK) {
+        std::cout << "Frame rate set failed fail! ret = " << ret << std::endl;
+        return -1;
+    }
+
+    ret = MV_CC_SetBoolValue(aps_camera_handle_, "AcquisitionFrameRateEnable", true);
+    if (ret != MV_OK) {
+        std::cout << "Frame rate enable fail! ret = " << ret << std::endl;
+        return -1;
+    }
+
+    //// Gain
+    ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "GainAuto", "Continuous");
+
+    //// Trigger settings
+    ret = MV_CC_SetEnumValue(aps_camera_handle_, "LineSelector", 1);
+    if (ret != MV_OK) {
+        std::cout << "MV_CC_SetEnumValue LineSelector fail! ret = " << ret << std::endl;
+    }
+
+    ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "LineMode", "Strobe");
+
     ret = MV_CC_SetEnumValueByString(aps_camera_handle_, "LineSource", "ExposureStartActive");
     if (ret != MV_OK) {
         std::cout << "MV_CC_SetEnumValue LineSource fail! ret = " << ret << std::endl;
@@ -146,7 +202,7 @@ bool HikCamera::openCamera(std::string serial_number) {
 }
 
 void HikCamera::bufferToMat(
-    cv::Mat& frame
+    dvsense::ApsFrame& rgb_frame
 ) {
     bool isMono;  // Mono or not
     switch (frame_out_.stFrameInfo.enPixelType) {
@@ -168,16 +224,10 @@ void HikCamera::bufferToMat(
         break;
     }
     if (isMono) {
-        frame = cv::Mat(
-            frame_out_.stFrameInfo.nHeight, frame_out_.stFrameInfo.nWidth, 0,
-            frame_out_.pBufAddr).clone();
+        // TODO: handle mono case
     }
     else {
         // convert to bgr
-        unsigned int dstBufSize =
-            frame_out_.stFrameInfo.nHeight * frame_out_.stFrameInfo.nWidth * 3 + 2048;
-        unsigned char* pDstData = (unsigned char*)malloc(dstBufSize);
-
         MV_CC_PIXEL_CONVERT_PARAM_EX stConvertParam = {
             frame_out_.stFrameInfo.nWidth,                      // nWidth
             frame_out_.stFrameInfo.nHeight,                     // nHeight
@@ -185,78 +235,104 @@ void HikCamera::bufferToMat(
             const_cast<unsigned char*>(frame_out_.pBufAddr),    // pSrcData
             frame_out_.stFrameInfo.nFrameLen,                   // nSrcDataLen
             PixelType_Gvsp_BGR8_Packed,                         // enDstPixelType
-            pDstData,                                           // pDstBuffer
+            //pDstData,                                         // pDstBuffer
+            rgb_frame.data(),
             0,                                                  // nDstLen
-            dstBufSize,                                         // nDstBufferSize
+            rgb_frame.getDataSize(),                                         // nDstBufferSize
             0
         };
         MV_CC_ConvertPixelTypeEx(aps_camera_handle_, &stConvertParam);
-        //frame = cv::Mat(frame_out_.stFrameInfo.nHeight, frame_out_.stFrameInfo.nWidth, 16,
-        //    pDstData).clone();
-        cv::Mat(frame_out_.stFrameInfo.nHeight, frame_out_.stFrameInfo.nWidth, 16, pDstData).copyTo(frame);
-        free(pDstData);
-        pDstData = NULL;
     }
 }
 
-int HikCamera::getNextFrame(FrameAndDrop& frame_and_drops) {
+int HikCamera::getNextFrame(dvsense::ApsFrame& rgb_frame, int& drop_frame_num) {
     int ret = MV_CC_GetImageBuffer(aps_camera_handle_, &frame_out_, 1000);
     if (ret != MV_OK) {
-        std::cout << "MV_CC_GetOneFrameTimeout fail! ret = " << std::to_string(ret) << std::endl;
-        frame_and_drops.frame = cv::Mat(frame_out_.stFrameInfo.nHeight, frame_out_.stFrameInfo.nWidth, CV_8UC1);
+        rgb_frame = dvsense::ApsFrame(0, 0);//size
         return -1;
     }
     else
     {
         unsigned long long current_frame_id = frame_out_.stFrameInfo.nFrameNum;
-        //std::cout << "currentFrameID: " << current_frame_id << std::endl;
-        frame_and_drops.drop_frame_num = current_frame_id - last_frame_id_ - 1;
-        if (frame_and_drops.drop_frame_num > 0)
+        drop_frame_num = current_frame_id - last_frame_id_ - 1;
+        if (drop_frame_num > 0)
         {
-            std::cout << "Aps drop a frame" << std::endl;
+            std::cout << "Warning! Aps drop a frame." << std::endl;
         }
         last_frame_id_ = current_frame_id;
     }
 
-    bufferToMat(frame_and_drops.frame);
+    bufferToMat(rgb_frame);
 
     ret = MV_CC_FreeImageBuffer(aps_camera_handle_, &frame_out_);
     if (ret != MV_OK) {
         std::cout << "MV_CC_ReleaseImageBuffer fail! ret = " << ret << std::endl;
-        frame_and_drops.frame = cv::Mat(frame_out_.stFrameInfo.nHeight, frame_out_.stFrameInfo.nWidth, CV_8UC1);
+        rgb_frame = dvsense::ApsFrame(0, 0);
         return -1;
     }
     return 0;
 }
 
 int HikCamera::startCamera() {
+    //MV_CC_SetBoolValue(aps_camera_handle_, "LineInverter", false);
     last_frame_id_ = -1;
-    frames_buffer_ = std::queue<cv::Mat>();
-    int ret = MV_CC_StartGrabbing(aps_camera_handle_);
-    if (ret != MV_OK) {
-        std::cout << "MV_CC_StartGrabbing fail! ret = " << ret << std::endl;
-        return -1;
+    frames_buffer_ = std::queue<dvsense::ApsFrame>();
+    int aps_width = getWidth();
+    int aps_height = getHeight();
+    //Ԥ��
+    for (int i = 0; i < 3; i++) 
+    {
+        frames_buffer_.emplace(dvsense::ApsFrame(0, 0));
     }
-    
-    is_grab_image_thread_running_ = true;
 
+    is_grab_image_thread_running_ = true;
+    MVCC_ENUMVALUE stEnumValue = { 0 };
+    MV_CC_GetEnumValue(aps_camera_handle_, "TriggerMode", &stEnumValue);
+    if (stEnumValue.nCurValue == 0)
+    {
+        bool ret = MV_CC_StartGrabbing(aps_camera_handle_);
+        if (ret != MV_OK) {
+            std::cout << "MV_CC_StartGrabbing fail! ret = " << ret << std::endl;
+            return -1;
+        }
+        while (is_grab_image_thread_running_)
+        {
+            int drop_nums;
+            dvsense::ApsFrame rgb_frame(aps_width, aps_height);
+            int ret = getNextFrame(rgb_frame, drop_nums);
+            if (ret == 0)
+            {
+                int ret = MV_CC_StopGrabbing(aps_camera_handle_);
+                break;
+            }
+            else {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    }
+
+    frames_buffer_ = std::queue<dvsense::ApsFrame>();
+
+    bool ret = MV_CC_StartGrabbing(aps_camera_handle_);
     grab_frame_thread_ = std::thread(
-        [this]() {         
+        [this, aps_width, aps_height]() {
             while (is_grab_image_thread_running_) {
-                FrameAndDrop new_frame_drop;
-                int ret = getNextFrame(new_frame_drop);
+
+                int drop_nums;
+                dvsense::ApsFrame rgb_frame(aps_width, aps_height);
+                int ret = getNextFrame(rgb_frame, drop_nums);
                 if (ret == 0) {
                     {
                         std::unique_lock<std::mutex> lock(frame_buffer_mutex_);
-                        for (int i = 0; i < new_frame_drop.drop_frame_num; i++) 
+                        for (int i = 0; i < drop_nums; i++)
                         {
-                            frames_buffer_.emplace(cv::Mat());
+                            frames_buffer_.emplace(dvsense::ApsFrame(0, 0));
                         }
-                        frames_buffer_.emplace(new_frame_drop.frame);
+                        frames_buffer_.emplace(rgb_frame);
                     }
                 }
                 else {
-                    std::cout << "when getNextFrame, ret is -1" << std::endl;
                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 }
             }
@@ -300,7 +376,8 @@ int HikCamera::destroyCamera() {
     return ret;
 }
 
-bool HikCamera::getNewRgbFrame(cv::Mat& output_frame) {
+bool HikCamera::getNewRgbFrame(dvsense::ApsFrame& output_frame) {
+    std::unique_lock<std::mutex> lock(frame_buffer_mutex_);
     if (frames_buffer_.empty())
     {
         return false;

@@ -1,5 +1,5 @@
 DVS-RGB相机套装SDK使用指南
-![图标](images/图标.png)
+![同步盒](images/同步盒.jpg)
 # 项目简介
 
 该项目为动微视觉-事件相机DVS与RGB相机的套装驱动，通过硬件级同步技术实现微秒级时域对齐，为机器人视觉、自动驾驶、工业检测等高精度场景提供时空一致的多模态视觉数据。
@@ -8,7 +8,7 @@ DVS-RGB相机套装SDK使用指南
 
 # 硬件准备  
 
-DVS事件相机[DVSLume](https://dvsense.com/dvslume)，RGB相机（目前支持海康相机，未来将支持到更多厂家），触发线， 触发电源，上拉电阻
+DVS事件相机[DVSLume](https://dvsense.com/dvslume)，RGB相机（目前支持[海康相机](https://www.hikvision.com/cn/) 和 [大恒相机](https://www.daheng-imaging.com/)，未来将支持到更多厂家），同步盒，触发线， 触发电源（5v或12v）
 
 # 接线方式
 针对NPN型相机（常开），接线如图所示：
@@ -47,7 +47,8 @@ git clone git@github.com:dvsense/dvsense_fusion_combo_sdk.git
 3. 在源码根目录下创建并配置 CMake 构建目录；  
 
 4. 编译完成后，您可以：  
-    - 运行samples 目录下的示例程序测试功能；  
+    - 安装dvsense_fusion_combo_sdk驱动，并添加到系统环境变量；
+    - 编译samples，运行samples 目录下的示例程序测试功能；  
     - 参考 API 文档开发自定义应用；  
     - 修改源码并重新编译以满足特定需求。
 
@@ -91,18 +92,20 @@ git clone git@github.com:dvsense/dvsense_fusion_combo_sdk.git
         make
 
 3. 编译完成后，您可以：  
-    - 运行samples 目录下的示例程序测试功能；  
+    - 安装dvsense_fusion_combo_sdk驱动，并添加到系统环境变量；
+    - 编译samples，运行samples 目录下的示例程序测试功能；  
     - 参考 API 文档开发自定义应用；  
     - 修改源码并重新编译以满足特定需求。
 
 # 快速开始
-1. 将DVS相机和RGB相机分别接入到电脑上，同时连接好触发线  
-2. 导入DvsRgbFusionCamera头文件  
+1. 将DVS相机和RGB相机分别接入到电脑上，同时连接好触发线和电源线
+2. 导入DvsRgbFusionCamera头文件所选择的RGB相机的头文件 
 
         #include "DvsRgbFusionCamera.hpp"
+        #include "DvsRgbFusionCamera/rgb/hik/HikCamera.hpp"
 3. 创建相机实例（设置帧率为60FPS，默认为30FPS）  
 
-        std::unique_ptr<DvsRgbFusionCamera> fusionCamera = std::make_unique<DvsRgbFusionCamera>(60);
+        std::unique_ptr<DvsRgbFusionCamera<HikCamera>> fusionCamera = std::make_unique<DvsRgbFusionCamera<HikCamera>>(60);
 4. 查找并打开相机，如果返回为true，表示两台相机连接成功   
 
         fusionCamera->findCamera();

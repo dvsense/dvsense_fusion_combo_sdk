@@ -3,7 +3,6 @@
 #include <vector>
 #include "json/json.hpp"
 #include "opencv2/opencv.hpp"
-#include "opencv2/core.hpp"
 
 #ifdef _WIN32
 #define DVSENSE_API __declspec(dllexport)
@@ -21,11 +20,7 @@ struct DVSENSE_API CameraParams
 class DVSENSE_API CalibrateThroughFile
 {
 public:
-	CalibrateThroughFile(std::string config_file):
-		config_file_(config_file)
-	{
-		readParams();
-	}
+	CalibrateThroughFile(std::string config_file);
 
 	~CalibrateThroughFile();
 
@@ -36,13 +31,11 @@ public:
 	cv::Mat warpImage(const cv::Mat&, const cv::Mat&, cv::Size); 
 
 private:
+	void readParams();
+
 	std::string config_file_;
 	CameraParams dvs_params_;
 	CameraParams aps_params_;
-
-	cv::Mat plane_normal_ = (cv::Mat_<double>(3, 1) << 0, 0, 1);	
-
-	void readParams();
-
+	cv::Mat plane_normal_;
 };
 

@@ -1,4 +1,4 @@
-#include "DvsRgbFusionCamera/camera_manager/DataToVideo.hpp"
+#include "DvsRgbFusionCamera/CameraManager/DataToVideo.hpp"
 #include "DvsenseBase/logging/logger.hh"
 #include <string>
 #include <chrono>
@@ -103,7 +103,7 @@
 		codec_ctx_->framerate = {framerate_, 1};
 		codec_ctx_->gop_size = 1;
 		codec_ctx_->keyint_min = 1;
-		codec_ctx_->bit_rate = 60000000;
+		codec_ctx_->bit_rate = 10000000;
 
 		if (avcodec_open2(codec_ctx_, av_codec_, nullptr) < 0)
 		{
@@ -245,9 +245,15 @@
 			return -1;
 		}
 
-		memcpy(src_frame_->data[0], rgb_data, src_height_ * src_frame_->linesize[0]);
+		const int bytes_per_pixel = 3; 
+		const int actual_width_bytes = src_width_ * bytes_per_pixel;
+		for (int i = 0; i < src_height_; ++i) {
+			const unsigned char* src_row = rgb_data + i * actual_width_bytes;
+			unsigned char* dst_row = src_frame_->data[0] + i * src_frame_->linesize[0];
+			memcpy(dst_row, src_row, actual_width_bytes);
+		}
 
-		sws_scale(sws_ctx_, src_frame_->data, src_frame_->linesize, 0, src_height_, dst_frame_->data, dst_frame_->linesize);
+		sws_scale(sws_ctx_, src_frame_->data, src_frame_->linesize, 0, src_height_ - 1, dst_frame_->data, dst_frame_->linesize);
 
 		if(ts == -1)
 		{
