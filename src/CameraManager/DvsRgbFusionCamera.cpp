@@ -235,7 +235,7 @@ std::string DvsRgbFusionCamera<RGBCameraType>::getCurrentTime() {
 }
 
 template<typename RGBCameraType>
-int DvsRgbFusionCamera<RGBCameraType>::startRecording(std::string output_dir) {
+int DvsRgbFusionCamera<RGBCameraType>::startRecording(std::string output_dir, float aps_pixel_size, int aps_offset_x, int aps_offset_y) {
     std::string current_time = getCurrentTime();
 
     std::string json_path;
@@ -253,6 +253,9 @@ int DvsRgbFusionCamera<RGBCameraType>::startRecording(std::string output_dir) {
     std::string aps_file_path = output_dir + "/fusion-" + current_time + ".mp4";
     sync_json_["aps_file_path"] = aps_file_path;
     sync_json_["dvs_file_path"] = dvs_file_path;
+    sync_json_["aps_pixel_size"] = aps_pixel_size;
+    sync_json_["aps_offset_x"] = aps_offset_x;
+    sync_json_["aps_offset_y"] = aps_offset_y;
 
     dvs_camera_->startRecording(dvs_file_path);
     aps_to_mp4_->setOutputFile(aps_file_path);

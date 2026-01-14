@@ -12,7 +12,8 @@ cv::Vec3b color_off = cv::Vec3b(0x00, 0xff, 0x00);
 //cv::Vec3b color_on = cv::Vec3b(0xbf, 0xbc, 0xb4);
 //cv::Vec3b color_off = cv::Vec3b(0x40, 0x3d, 0x33);
 
-const float dvs_xy_size = 4.86;
+const float dvs_pixel_size = 4.86;
+const float aps_pixel_size = 2.50;
 
 int main(int argc, char* argv[])
 {
@@ -94,7 +95,7 @@ int main(int argc, char* argv[])
 
 				if (!is_calibration_active)
 				{
-					float k = 5.86 / dvs_xy_size;
+					float k = aps_pixel_size / dvs_pixel_size;
 					cv::Mat scaled_image, padded_image;
 					cv::resize(reconstructed_image, padded_image, cv::Size(), k, k, cv::INTER_LINEAR);
 					//cv::copyMakeBorder(scaled_image, padded_image,
@@ -165,7 +166,7 @@ int main(int argc, char* argv[])
 		if ((key & 0xff) == ' ') {
 			if (!is_recording)
 			{
-				fusionCamera->startRecording(data_save_path);
+				fusionCamera->startRecording(data_save_path, aps_pixel_size, offset_x, offset_y);
 			}
 			if (is_recording)
 			{

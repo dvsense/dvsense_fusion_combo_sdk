@@ -161,7 +161,7 @@ public:
 	 * \~chinese @param file_path
 	 * \~chinese @return int 如果成功录制则返回0，否则返回错误代码
 	 */
-	int startRecording(std::string output_dir = "");
+	int startRecording(std::string output_dir = "", float aps_pixel_size = 4.86, int aps_offset_x = 0, int aps_offset_y = 0);
 
 	/**
 	 * \~english @brief Stop the camera
